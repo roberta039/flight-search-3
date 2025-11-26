@@ -580,3 +580,131 @@ def main():
                 with col2:
                     target_price = st.number_input(
                         "💰 Preț țintă (opțional
+                    target_price = st.number_input(
+                        "💰 Preț țintă (opțional)",
+                        min_value=0.0,
+                        value=0.0,
+                        step=10.0
+                    )
+                    
+                    if st.button("📈 Adaugă la Monitor"):
+                        params = st.session_state.last_search
+                        service = st.session_state.flight_service
+                        service.add_price_monitor(
+                            origin=params['origin'],
+                            destination=params['destination'],
+                            departure_date=params['departure_date'],
+                            target_price=target_price if target_price > 0 else None
+                        )
+                        st.success("✅ Rută adăugată la monitorizare!")
+            
+            # Afișare rezultate
+            currency = st.session_state.last_search.get('currency', 'EUR') if st.session_state.last_search else 'EUR'
+            display_flight_results(st.session_state.search_results, currency)
+    
+    with tab2:
+        render_price_monitor()
+    
+    with tab3:
+        render_airport_explorer()
+
+
+def render_airport_explorer():
+    """Randează exploratorul de aeroporturi"""
+    
+    st.markdown("### 🌍 Explorează Aeroporturi din Toată Lumea")
+    
+    airports = get_airports_by_continent()
+    
+    if not airports:
+        st.warning("Nu s-au putut încărca aeroporturile.")
+        return
+    
+    # Selectare continent
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        selected_continent = st.selectbox(
+            "🌍 Selectează Continentul",
+            options=list(airports.keys())
+        )
+    
+    with col2:
+        if selected_continent:
+            countries = list(airports[selected_continent].keys())
+            selected_country = st.selectbox(
+                "🏳️ Selectează Țara",
+                options=countries
+            )
+    
+    # Afișare aeroporturi
+    if selected_continent and selected_country:
+        airport_list = airports[selected_continent][selected_country]
+        
+        st.markdown(f"### ✈️ Aeroporturi în {selected_country}")
+        st.caption(f"Total: {len(airport_list)} aeroporturi")
+        
+        # Creare DataFrame
+        df = pd.DataFrame(airport_list)
+        df.columns = ['Cod IATA', 'Nume', 'Oraș', 'Latitudine', 'Longitudine']
+        
+        # Afișare tabel
+        st.dataframe(
+            df,
+            use_container_width=True,
+            column_config={
+                "Cod IATA": st.column_config.TextColumn(
+                    "🏷️ IATA",
+                    width="small"
+                ),
+                "Nume": st.column_config.TextColumn(
+                    "✈️ Aeroport",
+                    width="large"
+                ),
+                "Oraș": st.column_config.TextColumn(
+                    "🏙️ Oraș",
+                    width="medium"
+                )
+            },
+            hide_index=True
+        )
+        
+        # Statistici
+        st.markdown("---")
+        st.markdown("### 📊 Statistici Globale")
+        
+        total_airports = sum(
+            len(airports[cont][country])
+            for cont in airports
+            for country in airports[cont]
+        )
+        
+        total_countries = sum(
+            len(airports[cont])
+            for cont in airports
+        )
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("🌍 Continente", len(airports))
+        
+        with col2:
+            st.metric("🏳️ Țări", total_countries)
+        
+        with col3:
+            st.metric("✈️ Aeroporturi", total_airports)
+
+
+# Funcție pentru afișarea erorilor API
+def display_api_errors(errors: list):
+    """Afișează erorile API într-un mod prietenos"""
+    if errors:
+        with st.expander("⚠️ Avertismente API", expanded=False):
+            for error in errors:
+                st.warning(error)
+
+
+# Rulare aplicație
+if __name__ == "__main__":
+    main()
