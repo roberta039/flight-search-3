@@ -64,6 +64,12 @@ st.markdown("""
     div[data-testid="stDataFrame"] > div {
         width: 100% !important;
     }
+    .airport-selector {
+        background-color: #f0f2f6;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,81 +78,157 @@ def init_session_state():
     """Inițializează session state"""
     if 'search_results' not in st.session_state:
         st.session_state.search_results = []
-    if 'selected_airports' not in st.session_state:
-        st.session_state.selected_airports = {}
     if 'monitored_routes' not in st.session_state:
         st.session_state.monitored_routes = {}
     if 'last_search' not in st.session_state:
         st.session_state.last_search = None
     if 'flight_service' not in st.session_state:
         st.session_state.flight_service = FlightSearchService()
+    
+    # Pentru selectoare
+    if 'origin_continent' not in st.session_state:
+        st.session_state.origin_continent = None
+    if 'origin_country' not in st.session_state:
+        st.session_state.origin_country = None
+    if 'origin_airport' not in st.session_state:
+        st.session_state.origin_airport = None
+    if 'dest_continent' not in st.session_state:
+        st.session_state.dest_continent = None
+    if 'dest_country' not in st.session_state:
+        st.session_state.dest_country = None
+    if 'dest_airport' not in st.session_state:
+        st.session_state.dest_airport = None
 
 
-def load_airports():
-    """Încarcă lista de aeroporturi"""
-    service = st.session_state.flight_service
-    return service.get_airport_search_list()
-
-
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=86400, show_spinner=False)
 def get_airports_by_continent():
     """Obține aeroporturile organizate pe continente"""
     service = FlightSearchService()
     return service.get_all_airports()
 
 
-def create_airport_selector(label: str, key: str) -> Optional[str]:
-    """Creează un selector de aeroport organizat pe continente"""
+def create_airport_selector(label: str, key_prefix: str) -> Optional[str]:
+    """
+    Creează un selector de aeroport organizat pe continente
+    FĂRĂ a fi în interiorul unui form pentru actualizare dinamică
+    """
     
     airports = get_airports_by_continent()
     
     if not airports:
         st.warning("Nu s-au putut încărca aeroporturile. Introdu codul IATA manual.")
-        return st.text_input(label, key=key, max_chars=3).upper()
+        manual_code = st.text_input(
+            f"Cod IATA {label}", 
+            key=f"{key_prefix}_manual",
+            max_chars=3,
+            placeholder="Ex: OTP"
+        )
+        return manual_code.upper() if manual_code else None
     
-    # Selectare continent
-    continents = list(airports.keys())
-    selected_continent = st.selectbox(
-        f"🌍 Continent ({label})",
-        options=continents,
-        key=f"{key}_continent"
-    )
+    st.markdown(f"**{label}**")
     
-    if selected_continent and selected_continent in airports:
-        # Selectare țară
-        countries = list(airports[selected_continent].keys())
-        selected_country = st.selectbox(
-            f"🏳️ Țară ({label})",
-            options=countries,
-            key=f"{key}_country"
+    # Container pentru selectoare
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Selectare continent
+        continents = ["-- Selectează --"] + list(airports.keys())
+        
+        # Găsește indexul curent
+        current_continent = st.session_state.get(f'{key_prefix}_continent', None)
+        continent_index = 0
+        if current_continent and current_continent in continents:
+            continent_index = continents.index(current_continent)
+        
+        selected_continent = st.selectbox(
+            "🌍 Continent",
+            options=continents,
+            index=continent_index,
+            key=f"{key_prefix}_continent_select"
         )
         
-        if selected_country and selected_country in airports[selected_continent]:
-            # Selectare aeroport
-            airport_list = airports[selected_continent][selected_country]
-            airport_options = [
-                f"{a['iata']} - {a['name']} ({a['city']})"
-                for a in airport_list
-            ]
-            
-            if airport_options:
-                selected = st.selectbox(
-                    f"🛫 {label}",
-                    options=airport_options,
-                    key=f"{key}_airport"
-                )
-                
-                if selected:
-                    return selected.split(' - ')[0]
+        # Actualizează session state
+        if selected_continent != "-- Selectează --":
+            if st.session_state.get(f'{key_prefix}_continent') != selected_continent:
+                st.session_state[f'{key_prefix}_continent'] = selected_continent
+                st.session_state[f'{key_prefix}_country'] = None
+                st.session_state[f'{key_prefix}_airport'] = None
     
-    return None
+    with col2:
+        # Selectare țară
+        countries = ["-- Selectează --"]
+        
+        if selected_continent and selected_continent != "-- Selectează --":
+            if selected_continent in airports:
+                countries = ["-- Selectează --"] + sorted(list(airports[selected_continent].keys()))
+        
+        # Găsește indexul curent
+        current_country = st.session_state.get(f'{key_prefix}_country', None)
+        country_index = 0
+        if current_country and current_country in countries:
+            country_index = countries.index(current_country)
+        
+        selected_country = st.selectbox(
+            "🏳️ Țară",
+            options=countries,
+            index=country_index,
+            key=f"{key_prefix}_country_select"
+        )
+        
+        # Actualizează session state
+        if selected_country != "-- Selectează --":
+            if st.session_state.get(f'{key_prefix}_country') != selected_country:
+                st.session_state[f'{key_prefix}_country'] = selected_country
+                st.session_state[f'{key_prefix}_airport'] = None
+    
+    with col3:
+        # Selectare aeroport
+        airport_options = ["-- Selectează --"]
+        airport_codes = {}
+        
+        if (selected_continent and selected_continent != "-- Selectează --" and
+            selected_country and selected_country != "-- Selectează --"):
+            
+            if selected_continent in airports and selected_country in airports[selected_continent]:
+                airport_list = airports[selected_continent][selected_country]
+                for a in airport_list:
+                    display_name = f"{a['iata']} - {a['name']}"
+                    if a.get('city'):
+                        display_name += f" ({a['city']})"
+                    airport_options.append(display_name)
+                    airport_codes[display_name] = a['iata']
+        
+        # Găsește indexul curent
+        current_airport = st.session_state.get(f'{key_prefix}_airport', None)
+        airport_index = 0
+        if current_airport:
+            for i, opt in enumerate(airport_options):
+                if opt.startswith(current_airport):
+                    airport_index = i
+                    break
+        
+        selected_airport_display = st.selectbox(
+            "✈️ Aeroport",
+            options=airport_options,
+            index=airport_index,
+            key=f"{key_prefix}_airport_select"
+        )
+        
+        # Extrage codul IATA
+        selected_airport = None
+        if selected_airport_display and selected_airport_display != "-- Selectează --":
+            selected_airport = airport_codes.get(selected_airport_display)
+            if selected_airport:
+                st.session_state[f'{key_prefix}_airport'] = selected_airport
+    
+    return selected_airport
 
 
 def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
     """Afișează rezultatele căutării într-un tabel"""
     
     if not offers:
-        st.info("Nu s-au găsit zboruri pentru criteriile selectate.")
+        st.info("🔍 Nu s-au găsit zboruri pentru criteriile selectate. Încearcă alte date sau dezactivează filtrul 'Doar zboruri directe'.")
         return
     
     # Creare DataFrame
@@ -154,7 +236,9 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
     df = pd.DataFrame(data)
     
     # Statistici
+    st.markdown("### 📊 Rezumat")
     col1, col2, col3, col4 = st.columns(4)
+    
     with col1:
         st.metric("🔢 Rezultate", len(offers))
     with col2:
@@ -169,42 +253,64 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
     
     st.markdown("---")
     
-    # Opțiuni de afișare
-    col1, col2 = st.columns([3, 1])
+    # Opțiuni de afișare și filtrare
+    col1, col2, col3 = st.columns([2, 2, 2])
+    
     with col1:
         view_mode = st.radio(
             "Mod afișare:",
             ["📊 Tabel Excel", "🎴 Carduri"],
-            horizontal=True
+            horizontal=True,
+            key="view_mode"
         )
+    
     with col2:
         sort_by = st.selectbox(
             "Sortează după:",
-            ["Preț", "Durată", "Plecare", "Escale"]
+            ["Preț (crescător)", "Preț (descrescător)", "Durată", "Ora plecării", "Escale"],
+            key="sort_by"
         )
     
+    with col3:
+        filter_direct = st.checkbox("Arată doar zboruri directe", key="filter_direct_results")
+    
+    # Filtrare
+    df_filtered = df.copy()
+    if filter_direct:
+        df_filtered = df_filtered[df_filtered['Escale'] == 0]
+    
     # Sortare
-    sort_mapping = {
-        "Preț": "Preț",
-        "Durată": "Durată",
-        "Plecare": "Plecare",
-        "Escale": "Escale"
-    }
-    df_sorted = df.sort_values(by=sort_mapping[sort_by])
+    if sort_by == "Preț (crescător)":
+        df_filtered = df_filtered.sort_values(by='Preț', ascending=True)
+    elif sort_by == "Preț (descrescător)":
+        df_filtered = df_filtered.sort_values(by='Preț', ascending=False)
+    elif sort_by == "Durată":
+        df_filtered = df_filtered.sort_values(by='Durată')
+    elif sort_by == "Ora plecării":
+        df_filtered = df_filtered.sort_values(by='Plecare')
+    elif sort_by == "Escale":
+        df_filtered = df_filtered.sort_values(by=['Escale', 'Preț'])
+    
+    # Filtrare oferte pentru carduri
+    filtered_offers = [o for o in offers if o.id in df_filtered['ID'].values] if filter_direct else offers
     
     if "Tabel" in view_mode:
         # Afișare tabel stil Excel
         st.markdown("### 📋 Rezultate Căutare")
         
+        # Selectează coloanele de afișat
+        columns_to_show = ['Companie', 'Cod', 'De la', 'Către', 'Plecare', 'Sosire', 'Durată', 'Preț', 'Monedă', 'Escale', 'Locuri']
+        df_display = df_filtered[columns_to_show].copy()
+        
         # Afișare DataFrame
         st.dataframe(
-            df_sorted,
+            df_display,
             use_container_width=True,
             height=500,
             column_config={
                 "Preț": st.column_config.NumberColumn(
                     "💰 Preț",
-                    format="%.2f"
+                    format="%.2f €"
                 ),
                 "Escale": st.column_config.NumberColumn(
                     "🔄 Escale",
@@ -213,12 +319,21 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
                 "Companie": st.column_config.TextColumn(
                     "✈️ Companie",
                     width="medium"
-                )
-            }
+                ),
+                "De la": st.column_config.TextColumn(
+                    "🛫 De la",
+                    width="small"
+                ),
+                "Către": st.column_config.TextColumn(
+                    "🛬 Către",
+                    width="small"
+                ),
+            },
+            hide_index=True
         )
         
         # Buton export
-        csv = df_sorted.to_csv(index=False)
+        csv = df_filtered.to_csv(index=False)
         st.download_button(
             label="📥 Descarcă CSV",
             data=csv,
@@ -230,7 +345,11 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
         # Afișare carduri
         st.markdown("### ✈️ Zboruri Găsite")
         
-        for i, offer in enumerate(offers[:20]):
+        if not filtered_offers:
+            st.info("Nu există zboruri directe pentru această rută.")
+            return
+        
+        for i, offer in enumerate(filtered_offers[:30]):  # Limită 30 pentru performanță
             with st.container():
                 col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
                 
@@ -239,19 +358,25 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
                     st.caption(f"🛫 {offer.origin} → 🛬 {offer.destination}")
                 
                 with col2:
-                    st.markdown(f"**{offer.departure_time.strftime('%H:%M')}** → **{offer.arrival_time.strftime('%H:%M')}**")
-                    st.caption(f"⏱️ {offer.duration}")
+                    dep_time = offer.departure_time.strftime('%H:%M')
+                    arr_time = offer.arrival_time.strftime('%H:%M')
+                    dep_date = offer.departure_time.strftime('%d %b')
+                    st.markdown(f"**{dep_time}** → **{arr_time}**")
+                    st.caption(f"📅 {dep_date} | ⏱️ {offer.duration}")
                 
                 with col3:
                     if offer.stops == 0:
                         st.success("✈️ Direct")
                     else:
-                        st.warning(f"🔄 {offer.stops} escale")
+                        st.warning(f"🔄 {offer.stops} {'escală' if offer.stops == 1 else 'escale'}")
                 
                 with col4:
-                    st.markdown(f"### {format_price(offer.price, currency)}")
+                    st.markdown(f"### {format_price(offer.price, offer.currency)}")
                     if offer.seats_available:
-                        st.caption(f"🪑 {offer.seats_available} locuri")
+                        if offer.seats_available <= 3:
+                            st.error(f"🪑 Doar {offer.seats_available} locuri!")
+                        else:
+                            st.caption(f"🪑 {offer.seats_available} locuri")
                 
                 st.markdown("---")
 
@@ -261,26 +386,42 @@ def render_search_form():
     
     st.markdown('<p class="main-header">✈️ Caută Zboruri Ieftine</p>', unsafe_allow_html=True)
     
+    # ============================================
+    # SELECTOARE AEROPORTURI (în afara formularului)
+    # ============================================
+    
+    st.markdown("### 🛫 Selectează Aeroporturile")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("##### De unde pleci?")
+        with st.container():
+            origin = create_airport_selector("Origine", "origin")
+            if origin:
+                st.success(f"✅ Selectat: **{origin}**")
+    
+    with col2:
+        st.markdown("##### Unde mergi?")
+        with st.container():
+            destination = create_airport_selector("Destinație", "dest")
+            if destination:
+                st.success(f"✅ Selectat: **{destination}**")
+    
+    st.markdown("---")
+    
+    # ============================================
+    # RESTUL FORMULARULUI
+    # ============================================
+    
     with st.form("search_form"):
-        # Rând 1: Origine și Destinație
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 🛫 De unde?")
-            origin = create_airport_selector("Aeroport plecare", "origin")
-        
-        with col2:
-            st.markdown("### 🛬 Unde?")
-            destination = create_airport_selector("Aeroport sosire", "destination")
-        
-        st.markdown("---")
-        
-        # Rând 2: Date
-        col1, col2 = st.columns(2)
+        # Rând 1: Date
+        st.markdown("### 📅 Date Călătorie")
+        col1, col2, col3 = st.columns(3)
         
         with col1:
             departure_date = st.date_input(
-                "📅 Data plecării",
+                "Data plecării",
                 min_value=date.today(),
                 max_value=date.today() + timedelta(days=365),
                 value=date.today() + timedelta(days=30)
@@ -289,26 +430,30 @@ def render_search_form():
         with col2:
             trip_type = st.radio(
                 "Tip călătorie",
-                ["Doar dus", "Dus-întors"],
+                ["✈️ Doar dus", "🔄 Dus-întors"],
                 horizontal=True
             )
-            
+        
+        with col3:
             return_date = None
-            if trip_type == "Dus-întors":
+            if "Dus-întors" in trip_type:
                 return_date = st.date_input(
-                    "📅 Data întoarcerii",
-                    min_value=departure_date,
+                    "Data întoarcerii",
+                    min_value=departure_date + timedelta(days=1),
                     max_value=date.today() + timedelta(days=365),
                     value=departure_date + timedelta(days=7)
                 )
+            else:
+                st.empty()
         
         st.markdown("---")
         
-        # Rând 3: Pasageri și Opțiuni
+        # Rând 2: Pasageri
+        st.markdown("### 👥 Pasageri")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            adults = st.number_input("👨 Adulți", min_value=1, max_value=9, value=1)
+            adults = st.number_input("👨 Adulți (12+)", min_value=1, max_value=9, value=1)
         
         with col2:
             children = st.number_input("👶 Copii (2-11)", min_value=0, max_value=8, value=0)
@@ -319,15 +464,23 @@ def render_search_form():
         with col4:
             cabin_class = st.selectbox(
                 "💺 Clasă",
-                options=list(Settings.CABIN_CLASSES.keys()),
-                format_func=lambda x: Settings.CABIN_CLASSES[x]
+                options=['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'],
+                format_func=lambda x: {
+                    'ECONOMY': '💺 Economy',
+                    'PREMIUM_ECONOMY': '💺 Premium Economy',
+                    'BUSINESS': '💼 Business',
+                    'FIRST': '👑 First Class'
+                }.get(x, x)
             )
         
-        # Rând 4: Opțiuni suplimentare
+        st.markdown("---")
+        
+        # Rând 3: Opțiuni
+        st.markdown("### ⚙️ Opțiuni Căutare")
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            non_stop = st.checkbox("✈️ Doar zboruri directe", value=False)
+            non_stop = st.checkbox("✈️ **Doar zboruri directe**", value=False)
         
         with col2:
             currency = st.selectbox(
@@ -338,23 +491,32 @@ def render_search_form():
         
         with col3:
             max_results = st.slider(
-                "📊 Max rezultate",
+                "📊 Număr maxim rezultate",
                 min_value=10,
                 max_value=100,
-                value=50
+                value=50,
+                step=10
             )
         
+        st.markdown("---")
+        
         # Buton căutare
-        submitted = st.form_submit_button(
-            "🔍 Caută Zboruri",
-            use_container_width=True,
-            type="primary"
-        )
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            submitted = st.form_submit_button(
+                "🔍 CAUTĂ ZBORURI",
+                use_container_width=True,
+                type="primary"
+            )
         
         if submitted:
+            # Preia valorile din session state pentru aeroporturi
+            final_origin = st.session_state.get('origin_airport') or origin
+            final_destination = st.session_state.get('dest_airport') or destination
+            
             return {
-                'origin': origin,
-                'destination': destination,
+                'origin': final_origin,
+                'destination': final_destination,
                 'departure_date': departure_date.strftime('%Y-%m-%d') if departure_date else None,
                 'return_date': return_date.strftime('%Y-%m-%d') if return_date else None,
                 'adults': adults,
@@ -373,75 +535,104 @@ def render_price_monitor():
     """Randează secțiunea de monitorizare prețuri"""
     
     st.markdown("### 📈 Monitor Prețuri")
+    st.caption("Urmărește evoluția prețurilor pentru rutele tale favorite")
     
     monitors = cache_manager.get_price_monitors()
     
     if not monitors:
-        st.info("Nu ai nicio rută monitorizată. Caută un zbor și adaugă-l la monitorizare!")
+        st.info("📭 Nu ai nicio rută monitorizată încă.\n\nCaută un zbor și apasă 'Adaugă la Monitor' pentru a urmări prețurile!")
         return
     
     for route_key, monitor in monitors.items():
         with st.expander(f"🛫 {route_key}", expanded=True):
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 lowest = monitor.get('lowest_price')
                 if lowest:
-                    st.metric("Preț minim găsit", format_price(lowest, 'EUR'))
+                    st.metric("💰 Preț minim", format_price(lowest, 'EUR'))
                 else:
-                    st.metric("Preț minim găsit", "N/A")
+                    st.metric("💰 Preț minim", "N/A")
             
             with col2:
                 target = monitor.get('target_price')
                 if target:
-                    st.metric("Preț țintă", format_price(target, 'EUR'))
+                    st.metric("🎯 Preț țintă", format_price(target, 'EUR'))
+                    if lowest and lowest <= target:
+                        st.success("✅ Sub prețul țintă!")
                 else:
-                    st.caption("Fără preț țintă setat")
+                    st.caption("Fără preț țintă")
             
             with col3:
                 last_check = monitor.get('last_check')
                 if last_check:
-                    st.caption(f"Ultima verificare: {last_check.strftime('%H:%M')}")
+                    st.caption(f"🕐 Ultima verificare:")
+                    st.caption(f"{last_check.strftime('%d/%m %H:%M')}")
+            
+            with col4:
+                if st.button(f"🗑️ Șterge", key=f"remove_{route_key}"):
+                    cache_manager.remove_price_monitor(route_key)
+                    st.rerun()
             
             # Istoric prețuri
             history = cache_manager.get_price_history(route_key)
             if history and len(history) > 1:
+                st.markdown("**📊 Evoluție prețuri:**")
                 df = pd.DataFrame(history)
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
-                st.line_chart(df.set_index('timestamp')['price'])
-            
-            if st.button(f"🗑️ Elimină", key=f"remove_{route_key}"):
-                cache_manager.remove_price_monitor(route_key)
-                st.rerun()
+                df = df.set_index('timestamp')
+                st.line_chart(df['price'])
 
 
 def render_airport_explorer():
     """Randează exploratorul de aeroporturi"""
     
     st.markdown("### 🌍 Explorează Aeroporturi din Toată Lumea")
+    st.caption("Descoperă toate aeroporturile organizate pe continente și țări")
     
     airports = get_airports_by_continent()
     
     if not airports:
-        st.warning("Nu s-au putut încărca aeroporturile.")
+        st.warning("⚠️ Nu s-au putut încărca aeroporturile. Verifică conexiunea API.")
         return
     
-    # Selectare continent
+    # Statistici globale
+    total_airports = sum(
+        len(airports[cont][country])
+        for cont in airports
+        for country in airports[cont]
+    )
+    
+    total_countries = sum(len(airports[cont]) for cont in airports)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("🌍 Continente", len(airports))
+    with col2:
+        st.metric("🏳️ Țări", total_countries)
+    with col3:
+        st.metric("✈️ Aeroporturi", total_airports)
+    
+    st.markdown("---")
+    
+    # Selectare continent și țară
     col1, col2 = st.columns(2)
     
     with col1:
         selected_continent = st.selectbox(
             "🌍 Selectează Continentul",
-            options=list(airports.keys())
+            options=list(airports.keys()),
+            key="explorer_continent"
         )
     
     selected_country = None
     with col2:
         if selected_continent:
-            countries = list(airports[selected_continent].keys())
+            countries = sorted(list(airports[selected_continent].keys()))
             selected_country = st.selectbox(
                 "🏳️ Selectează Țara",
-                options=countries
+                options=countries,
+                key="explorer_country"
             )
     
     # Afișare aeroporturi
@@ -453,48 +644,38 @@ def render_airport_explorer():
         
         # Creare DataFrame
         df = pd.DataFrame(airport_list)
+        
         if not df.empty:
-            df.columns = ['Cod IATA', 'Nume', 'Oraș', 'Latitudine', 'Longitudine']
+            # Redenumește coloanele
+            df.columns = ['Cod IATA', 'Nume Aeroport', 'Oraș', 'Latitudine', 'Longitudine']
             
             # Afișare tabel
             st.dataframe(
-                df[['Cod IATA', 'Nume', 'Oraș']],
+                df[['Cod IATA', 'Nume Aeroport', 'Oraș']],
                 use_container_width=True,
-                hide_index=True
+                hide_index=True,
+                column_config={
+                    "Cod IATA": st.column_config.TextColumn("🏷️ IATA", width="small"),
+                    "Nume Aeroport": st.column_config.TextColumn("✈️ Aeroport", width="large"),
+                    "Oraș": st.column_config.TextColumn("🏙️ Oraș", width="medium"),
+                }
             )
-    
-    # Statistici
-    st.markdown("---")
-    st.markdown("### 📊 Statistici Globale")
-    
-    total_airports = sum(
-        len(airports[cont][country])
-        for cont in airports
-        for country in airports[cont]
-    )
-    
-    total_countries = sum(
-        len(airports[cont])
-        for cont in airports
-    )
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("🌍 Continente", len(airports))
-    
-    with col2:
-        st.metric("🏳️ Țări", total_countries)
-    
-    with col3:
-        st.metric("✈️ Aeroporturi", total_airports)
+            
+            # Export
+            csv = df.to_csv(index=False)
+            st.download_button(
+                label=f"📥 Descarcă aeroporturi {selected_country}",
+                data=csv,
+                file_name=f"aeroporturi_{selected_country}.csv",
+                mime="text/csv"
+            )
 
 
 def render_sidebar():
     """Randează sidebar-ul"""
     
     with st.sidebar:
-        st.markdown("## ⚙️ Setări")
+        st.markdown("## ⚙️ Setări & Info")
         
         # Status API-uri
         st.markdown("### 📡 Status API-uri")
@@ -509,9 +690,9 @@ def render_sidebar():
         
         for api, status in api_status.items():
             if status:
-                st.success(f"✅ {api}")
+                st.success(f"✅ {api} - Conectat")
             else:
-                st.error(f"❌ {api}")
+                st.error(f"❌ {api} - Neconfig.")
         
         st.markdown("---")
         
@@ -528,39 +709,50 @@ def render_sidebar():
                 value=15
             )
             
-            st.info(f"Se va reîmprospăta la fiecare {refresh_interval} minute")
+            st.info(f"🔄 Refresh la fiecare {refresh_interval} min")
             
-            # Implementare auto-refresh
             try:
                 from streamlit_autorefresh import st_autorefresh
-                st_autorefresh(interval=refresh_interval * 60 * 1000, key="auto_refresh")
+                count = st_autorefresh(
+                    interval=refresh_interval * 60 * 1000, 
+                    key="auto_refresh"
+                )
+                if count > 0:
+                    st.caption(f"Refresh #{count}")
             except ImportError:
-                st.warning("Instalează streamlit-autorefresh pentru auto-refresh")
+                st.warning("⚠️ Instalează streamlit-autorefresh")
+        
+        st.markdown("---")
+        
+        # Acțiuni
+        st.markdown("### 🛠️ Acțiuni")
+        
+        if st.button("🗑️ Golește Cache", use_container_width=True):
+            cache_manager.clear_cache()
+            st.cache_data.clear()
+            st.success("✅ Cache golit!")
+            time.sleep(1)
+            st.rerun()
+        
+        if st.button("🔄 Reîncarcă Pagina", use_container_width=True):
+            st.rerun()
         
         st.markdown("---")
         
         # Despre
         st.markdown("### ℹ️ Despre")
         st.caption("""
-        **Flight Search App**
+        **Flight Search App** v1.0
         
-        Caută cele mai ieftine zboruri 
-        din multiple surse.
+        🔍 Caută zboruri ieftine din multiple surse
         
-        Folosește API-uri oficiale:
-        - Amadeus
-        - AirLabs
-        - AeroDataBox
+        **API-uri folosite:**
+        - Amadeus (prețuri)
+        - AirLabs (aeroporturi)
+        - AeroDataBox (info)
         
-        © 2024
+        Made with ❤️ & Streamlit
         """)
-        
-        # Clear cache
-        if st.button("🗑️ Golește Cache"):
-            cache_manager.clear_cache()
-            st.cache_data.clear()
-            st.success("Cache-ul a fost golit!")
-            st.rerun()
 
 
 def main():
@@ -584,11 +776,20 @@ def main():
         search_params = render_search_form()
         
         if search_params:
+            # Verificare selecție
+            if not search_params['origin']:
+                st.error("❌ Te rog selectează aeroportul de plecare!")
+                st.stop()
+            
+            if not search_params['destination']:
+                st.error("❌ Te rog selectează aeroportul de destinație!")
+                st.stop()
+            
             # Validare
             is_valid, errors = validate_search_params(
-                origin=search_params['origin'] or '',
-                destination=search_params['destination'] or '',
-                departure_date=search_params['departure_date'] or '',
+                origin=search_params['origin'],
+                destination=search_params['destination'],
+                departure_date=search_params['departure_date'],
                 return_date=search_params['return_date'],
                 adults=search_params['adults'],
                 children=search_params['children'],
@@ -600,25 +801,33 @@ def main():
                     st.error(f"❌ {error}")
             else:
                 # Căutare
-                with st.spinner("🔍 Căutare în curs..."):
+                with st.spinner("🔍 Căutare în curs... Aceasta poate dura câteva secunde."):
                     service = st.session_state.flight_service
                     
-                    results = service.search_flights(
-                        origin=search_params['origin'],
-                        destination=search_params['destination'],
-                        departure_date=search_params['departure_date'],
-                        return_date=search_params['return_date'],
-                        adults=search_params['adults'],
-                        children=search_params['children'],
-                        infants=search_params['infants'],
-                        cabin_class=search_params['cabin_class'],
-                        non_stop=search_params['non_stop'],
-                        currency=search_params['currency'],
-                        max_results=search_params['max_results']
-                    )
-                    
-                    st.session_state.search_results = results
-                    st.session_state.last_search = search_params
+                    try:
+                        results = service.search_flights(
+                            origin=search_params['origin'],
+                            destination=search_params['destination'],
+                            departure_date=search_params['departure_date'],
+                            return_date=search_params['return_date'],
+                            adults=search_params['adults'],
+                            children=search_params['children'],
+                            infants=search_params['infants'],
+                            cabin_class=search_params['cabin_class'],
+                            non_stop=search_params['non_stop'],
+                            currency=search_params['currency'],
+                            max_results=search_params['max_results']
+                        )
+                        
+                        st.session_state.search_results = results
+                        st.session_state.last_search = search_params
+                        
+                        if results:
+                            st.success(f"✅ Am găsit {len(results)} zboruri!")
+                        
+                    except Exception as e:
+                        st.error(f"❌ Eroare la căutare: {str(e)}")
+                        st.session_state.search_results = []
         
         # Afișare rezultate
         if st.session_state.search_results:
@@ -626,28 +835,35 @@ def main():
             
             # Buton adăugare la monitor
             if st.session_state.last_search:
-                col1, col2 = st.columns([3, 1])
-                with col2:
-                    target_price = st.number_input(
-                        "💰 Preț țintă (opțional)",
-                        min_value=0.0,
-                        value=0.0,
-                        step=10.0
-                    )
+                with st.expander("📈 Adaugă la Monitorizare Prețuri"):
+                    col1, col2 = st.columns(2)
                     
-                    if st.button("📈 Adaugă la Monitor"):
-                        params = st.session_state.last_search
-                        service = st.session_state.flight_service
-                        service.add_price_monitor(
-                            origin=params['origin'],
-                            destination=params['destination'],
-                            departure_date=params['departure_date'],
-                            target_price=target_price if target_price > 0 else None
+                    with col1:
+                        target_price = st.number_input(
+                            "💰 Preț țintă (opțional)",
+                            min_value=0.0,
+                            value=0.0,
+                            step=10.0,
+                            help="Vei fi notificat când prețul scade sub această valoare"
                         )
-                        st.success("✅ Rută adăugată la monitorizare!")
+                    
+                    with col2:
+                        st.markdown("")
+                        st.markdown("")
+                        if st.button("📈 Adaugă la Monitor", use_container_width=True):
+                            params = st.session_state.last_search
+                            service = st.session_state.flight_service
+                            service.add_price_monitor(
+                                origin=params['origin'],
+                                destination=params['destination'],
+                                departure_date=params['departure_date'],
+                                target_price=target_price if target_price > 0 else None
+                            )
+                            st.success("✅ Rută adăugată la monitorizare!")
+                            st.balloons()
             
             # Afișare rezultate
-            currency = st.session_state.last_search.get('currency', 'EUR') if st.session_state.last_search else 'EUR'
+            currency = st.session_state.last_search.get('currency', 'EUR')
             display_flight_results(st.session_state.search_results, currency)
     
     with tab2:
