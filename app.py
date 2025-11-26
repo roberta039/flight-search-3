@@ -196,27 +196,9 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
         # Afișare tabel stil Excel
         st.markdown("### 📋 Rezultate Căutare")
         
-        # Configurare stiluri pentru DataFrame
-        def highlight_price(val):
-            if val == df['Preț'].min():
-                return 'background-color: #90EE90'
-            return ''
-        
-        def highlight_direct(val):
-            if val == 0:
-                return 'background-color: #90EE90'
-            return ''
-        
-        # Afișare cu styling
-        styled_df = df_sorted.style\
-            .applymap(highlight_price, subset=['Preț'])\
-            .applymap(highlight_direct, subset=['Escale'])\
-            .format({
-                'Preț': lambda x: format_price(x, currency)
-            })
-        
+        # Afișare DataFrame
         st.dataframe(
-            styled_df,
+            df_sorted,
             use_container_width=True,
             height=500,
             column_config={
@@ -248,7 +230,7 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
         # Afișare carduri
         st.markdown("### ✈️ Zboruri Găsite")
         
-        for i, offer in enumerate(offers[:20]):  # Limită 20 pentru performanță
+        for i, offer in enumerate(offers[:20]):
             with st.container():
                 col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
                 
@@ -264,7 +246,7 @@ def display_flight_results(offers: List[FlightOffer], currency: str = 'EUR'):
                     if offer.stops == 0:
                         st.success("✈️ Direct")
                     else:
-                        st.warning(f"🔄 {offer.stops} {'escală' if offer.stops == 1 else 'escale'}")
+                        st.warning(f"🔄 {offer.stops} escale")
                 
                 with col4:
                     st.markdown(f"### {format_price(offer.price, currency)}")
@@ -403,10 +385,11 @@ def render_price_monitor():
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.metric(
-                    "Preț minim găsit",
-                    format_price(monitor['lowest_price'] or 0, 'EUR')
-                )
+                lowest = monitor.get('lowest_price')
+                if lowest:
+                    st.metric("Preț minim găsit", format_price(lowest, 'EUR'))
+                else:
+                    st.metric("Preț minim găsit", "N/A")
             
             with col2:
                 target = monitor.get('target_price')
@@ -422,23 +405,89 @@ def render_price_monitor():
             
             # Istoric prețuri
             history = cache_manager.get_price_history(route_key)
-            if history:
-                import altair as alt
-                
+            if history and len(history) > 1:
                 df = pd.DataFrame(history)
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
-                
-                chart = alt.Chart(df).mark_line(point=True).encode(
-                    x='timestamp:T',
-                    y='price:Q',
-                    tooltip=['timestamp:T', 'price:Q']
-                ).properties(height=200)
-                
-                st.altair_chart(chart, use_container_width=True)
+                st.line_chart(df.set_index('timestamp')['price'])
             
             if st.button(f"🗑️ Elimină", key=f"remove_{route_key}"):
                 cache_manager.remove_price_monitor(route_key)
                 st.rerun()
+
+
+def render_airport_explorer():
+    """Randează exploratorul de aeroporturi"""
+    
+    st.markdown("### 🌍 Explorează Aeroporturi din Toată Lumea")
+    
+    airports = get_airports_by_continent()
+    
+    if not airports:
+        st.warning("Nu s-au putut încărca aeroporturile.")
+        return
+    
+    # Selectare continent
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        selected_continent = st.selectbox(
+            "🌍 Selectează Continentul",
+            options=list(airports.keys())
+        )
+    
+    selected_country = None
+    with col2:
+        if selected_continent:
+            countries = list(airports[selected_continent].keys())
+            selected_country = st.selectbox(
+                "🏳️ Selectează Țara",
+                options=countries
+            )
+    
+    # Afișare aeroporturi
+    if selected_continent and selected_country:
+        airport_list = airports[selected_continent][selected_country]
+        
+        st.markdown(f"### ✈️ Aeroporturi în {selected_country}")
+        st.caption(f"Total: {len(airport_list)} aeroporturi")
+        
+        # Creare DataFrame
+        df = pd.DataFrame(airport_list)
+        if not df.empty:
+            df.columns = ['Cod IATA', 'Nume', 'Oraș', 'Latitudine', 'Longitudine']
+            
+            # Afișare tabel
+            st.dataframe(
+                df[['Cod IATA', 'Nume', 'Oraș']],
+                use_container_width=True,
+                hide_index=True
+            )
+    
+    # Statistici
+    st.markdown("---")
+    st.markdown("### 📊 Statistici Globale")
+    
+    total_airports = sum(
+        len(airports[cont][country])
+        for cont in airports
+        for country in airports[cont]
+    )
+    
+    total_countries = sum(
+        len(airports[cont])
+        for cont in airports
+    )
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("🌍 Continente", len(airports))
+    
+    with col2:
+        st.metric("🏳️ Țări", total_countries)
+    
+    with col3:
+        st.metric("✈️ Aeroporturi", total_airports)
 
 
 def render_sidebar():
@@ -453,9 +502,9 @@ def render_sidebar():
         keys = Settings.get_api_keys()
         
         api_status = {
-            "Amadeus": bool(keys['amadeus_key'] and keys['amadeus_secret']),
-            "AirLabs": bool(keys['airlabs_key']),
-            "RapidAPI": bool(keys['rapidapi_key'])
+            "Amadeus": bool(keys.get('amadeus_key') and keys.get('amadeus_secret')),
+            "AirLabs": bool(keys.get('airlabs_key')),
+            "RapidAPI": bool(keys.get('rapidapi_key'))
         }
         
         for api, status in api_status.items():
@@ -481,7 +530,7 @@ def render_sidebar():
             
             st.info(f"Se va reîmprospăta la fiecare {refresh_interval} minute")
             
-            # Implementare auto-refresh folosind streamlit-autorefresh
+            # Implementare auto-refresh
             try:
                 from streamlit_autorefresh import st_autorefresh
                 st_autorefresh(interval=refresh_interval * 60 * 1000, key="auto_refresh")
@@ -509,6 +558,7 @@ def render_sidebar():
         # Clear cache
         if st.button("🗑️ Golește Cache"):
             cache_manager.clear_cache()
+            st.cache_data.clear()
             st.success("Cache-ul a fost golit!")
             st.rerun()
 
@@ -579,8 +629,6 @@ def main():
                 col1, col2 = st.columns([3, 1])
                 with col2:
                     target_price = st.number_input(
-                        "💰 Preț țintă (opțional
-                    target_price = st.number_input(
                         "💰 Preț țintă (opțional)",
                         min_value=0.0,
                         value=0.0,
@@ -607,102 +655,6 @@ def main():
     
     with tab3:
         render_airport_explorer()
-
-
-def render_airport_explorer():
-    """Randează exploratorul de aeroporturi"""
-    
-    st.markdown("### 🌍 Explorează Aeroporturi din Toată Lumea")
-    
-    airports = get_airports_by_continent()
-    
-    if not airports:
-        st.warning("Nu s-au putut încărca aeroporturile.")
-        return
-    
-    # Selectare continent
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        selected_continent = st.selectbox(
-            "🌍 Selectează Continentul",
-            options=list(airports.keys())
-        )
-    
-    with col2:
-        if selected_continent:
-            countries = list(airports[selected_continent].keys())
-            selected_country = st.selectbox(
-                "🏳️ Selectează Țara",
-                options=countries
-            )
-    
-    # Afișare aeroporturi
-    if selected_continent and selected_country:
-        airport_list = airports[selected_continent][selected_country]
-        
-        st.markdown(f"### ✈️ Aeroporturi în {selected_country}")
-        st.caption(f"Total: {len(airport_list)} aeroporturi")
-        
-        # Creare DataFrame
-        df = pd.DataFrame(airport_list)
-        df.columns = ['Cod IATA', 'Nume', 'Oraș', 'Latitudine', 'Longitudine']
-        
-        # Afișare tabel
-        st.dataframe(
-            df,
-            use_container_width=True,
-            column_config={
-                "Cod IATA": st.column_config.TextColumn(
-                    "🏷️ IATA",
-                    width="small"
-                ),
-                "Nume": st.column_config.TextColumn(
-                    "✈️ Aeroport",
-                    width="large"
-                ),
-                "Oraș": st.column_config.TextColumn(
-                    "🏙️ Oraș",
-                    width="medium"
-                )
-            },
-            hide_index=True
-        )
-        
-        # Statistici
-        st.markdown("---")
-        st.markdown("### 📊 Statistici Globale")
-        
-        total_airports = sum(
-            len(airports[cont][country])
-            for cont in airports
-            for country in airports[cont]
-        )
-        
-        total_countries = sum(
-            len(airports[cont])
-            for cont in airports
-        )
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("🌍 Continente", len(airports))
-        
-        with col2:
-            st.metric("🏳️ Țări", total_countries)
-        
-        with col3:
-            st.metric("✈️ Aeroporturi", total_airports)
-
-
-# Funcție pentru afișarea erorilor API
-def display_api_errors(errors: list):
-    """Afișează erorile API într-un mod prietenos"""
-    if errors:
-        with st.expander("⚠️ Avertismente API", expanded=False):
-            for error in errors:
-                st.warning(error)
 
 
 # Rulare aplicație
