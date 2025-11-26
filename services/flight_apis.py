@@ -13,11 +13,338 @@ from config.settings import Settings
 from .cache_manager import cache_manager
 
 
+# Dicționar complet cu toate țările din lume
+COUNTRY_NAMES = {
+    # Europa
+    "AD": "Andorra",
+    "AL": "Albania",
+    "AT": "Austria",
+    "BA": "Bosnia și Herțegovina",
+    "BE": "Belgia",
+    "BG": "Bulgaria",
+    "BY": "Belarus",
+    "CH": "Elveția",
+    "CY": "Cipru",
+    "CZ": "Cehia",
+    "DE": "Germania",
+    "DK": "Danemarca",
+    "EE": "Estonia",
+    "ES": "Spania",
+    "FI": "Finlanda",
+    "FO": "Insulele Feroe",
+    "FR": "Franța",
+    "GB": "Marea Britanie",
+    "GI": "Gibraltar",
+    "GR": "Grecia",
+    "HR": "Croația",
+    "HU": "Ungaria",
+    "IE": "Irlanda",
+    "IS": "Islanda",
+    "IT": "Italia",
+    "LI": "Liechtenstein",
+    "LT": "Lituania",
+    "LU": "Luxemburg",
+    "LV": "Letonia",
+    "MC": "Monaco",
+    "MD": "Moldova",
+    "ME": "Muntenegru",
+    "MK": "Macedonia de Nord",
+    "MT": "Malta",
+    "NL": "Olanda",
+    "NO": "Norvegia",
+    "PL": "Polonia",
+    "PT": "Portugalia",
+    "RO": "România",
+    "RS": "Serbia",
+    "RU": "Rusia",
+    "SE": "Suedia",
+    "SI": "Slovenia",
+    "SK": "Slovacia",
+    "SM": "San Marino",
+    "UA": "Ucraina",
+    "VA": "Vatican",
+    "XK": "Kosovo",
+    
+    # Asia
+    "AE": "Emiratele Arabe Unite",
+    "AF": "Afganistan",
+    "AM": "Armenia",
+    "AZ": "Azerbaidjan",
+    "BD": "Bangladesh",
+    "BH": "Bahrain",
+    "BN": "Brunei",
+    "BT": "Bhutan",
+    "CN": "China",
+    "GE": "Georgia",
+    "HK": "Hong Kong",
+    "ID": "Indonezia",
+    "IL": "Israel",
+    "IN": "India",
+    "IQ": "Irak",
+    "IR": "Iran",
+    "JO": "Iordania",
+    "JP": "Japonia",
+    "KG": "Kârgâzstan",
+    "KH": "Cambodgia",
+    "KP": "Coreea de Nord",
+    "KR": "Coreea de Sud",
+    "KW": "Kuweit",
+    "KZ": "Kazahstan",
+    "LA": "Laos",
+    "LB": "Liban",
+    "LK": "Sri Lanka",
+    "MM": "Myanmar",
+    "MN": "Mongolia",
+    "MO": "Macao",
+    "MV": "Maldive",
+    "MY": "Malaezia",
+    "NP": "Nepal",
+    "OM": "Oman",
+    "PH": "Filipine",
+    "PK": "Pakistan",
+    "PS": "Palestina",
+    "QA": "Qatar",
+    "SA": "Arabia Saudită",
+    "SG": "Singapore",
+    "SY": "Siria",
+    "TH": "Thailanda",
+    "TJ": "Tadjikistan",
+    "TL": "Timorul de Est",
+    "TM": "Turkmenistan",
+    "TR": "Turcia",
+    "TW": "Taiwan",
+    "UZ": "Uzbekistan",
+    "VN": "Vietnam",
+    "YE": "Yemen",
+    
+    # Africa
+    "AO": "Angola",
+    "BF": "Burkina Faso",
+    "BI": "Burundi",
+    "BJ": "Benin",
+    "BW": "Botswana",
+    "CD": "Congo (RD)",
+    "CF": "Republica Centrafricană",
+    "CG": "Congo",
+    "CI": "Coasta de Fildeș",
+    "CM": "Camerun",
+    "CV": "Capul Verde",
+    "DJ": "Djibouti",
+    "DZ": "Algeria",
+    "EG": "Egipt",
+    "EH": "Sahara Occidentală",
+    "ER": "Eritreea",
+    "ET": "Etiopia",
+    "GA": "Gabon",
+    "GH": "Ghana",
+    "GM": "Gambia",
+    "GN": "Guineea",
+    "GQ": "Guineea Ecuatorială",
+    "GW": "Guineea-Bissau",
+    "KE": "Kenya",
+    "KM": "Comore",
+    "LR": "Liberia",
+    "LS": "Lesotho",
+    "LY": "Libia",
+    "MA": "Maroc",
+    "MG": "Madagascar",
+    "ML": "Mali",
+    "MR": "Mauritania",
+    "MU": "Mauritius",
+    "MW": "Malawi",
+    "MZ": "Mozambic",
+    "NA": "Namibia",
+    "NE": "Niger",
+    "NG": "Nigeria",
+    "RE": "Réunion",
+    "RW": "Rwanda",
+    "SC": "Seychelles",
+    "SD": "Sudan",
+    "SL": "Sierra Leone",
+    "SN": "Senegal",
+    "SO": "Somalia",
+    "SS": "Sudanul de Sud",
+    "ST": "São Tomé și Príncipe",
+    "SZ": "Eswatini",
+    "TD": "Ciad",
+    "TG": "Togo",
+    "TN": "Tunisia",
+    "TZ": "Tanzania",
+    "UG": "Uganda",
+    "YT": "Mayotte",
+    "ZA": "Africa de Sud",
+    "ZM": "Zambia",
+    "ZW": "Zimbabwe",
+    
+    # America de Nord
+    "AG": "Antigua și Barbuda",
+    "AI": "Anguilla",
+    "AW": "Aruba",
+    "BB": "Barbados",
+    "BM": "Bermuda",
+    "BS": "Bahamas",
+    "BZ": "Belize",
+    "CA": "Canada",
+    "CR": "Costa Rica",
+    "CU": "Cuba",
+    "CW": "Curaçao",
+    "DM": "Dominica",
+    "DO": "Republica Dominicană",
+    "GD": "Grenada",
+    "GL": "Groenlanda",
+    "GP": "Guadelupa",
+    "GT": "Guatemala",
+    "HN": "Honduras",
+    "HT": "Haiti",
+    "JM": "Jamaica",
+    "KN": "Saint Kitts și Nevis",
+    "KY": "Insulele Cayman",
+    "LC": "Saint Lucia",
+    "MQ": "Martinica",
+    "MS": "Montserrat",
+    "MX": "Mexic",
+    "NI": "Nicaragua",
+    "PA": "Panama",
+    "PM": "Saint Pierre și Miquelon",
+    "PR": "Puerto Rico",
+    "SV": "El Salvador",
+    "SX": "Sint Maarten",
+    "TC": "Insulele Turks și Caicos",
+    "TT": "Trinidad și Tobago",
+    "US": "Statele Unite",
+    "VC": "Saint Vincent și Grenadine",
+    "VG": "Insulele Virgine Britanice",
+    "VI": "Insulele Virgine Americane",
+    
+    # America de Sud
+    "AR": "Argentina",
+    "BO": "Bolivia",
+    "BR": "Brazilia",
+    "CL": "Chile",
+    "CO": "Columbia",
+    "EC": "Ecuador",
+    "FK": "Insulele Falkland",
+    "GF": "Guyana Franceză",
+    "GY": "Guyana",
+    "PE": "Peru",
+    "PY": "Paraguay",
+    "SR": "Surinam",
+    "UY": "Uruguay",
+    "VE": "Venezuela",
+    
+    # Oceania
+    "AS": "Samoa Americană",
+    "AU": "Australia",
+    "CK": "Insulele Cook",
+    "FJ": "Fiji",
+    "FM": "Micronezia",
+    "GU": "Guam",
+    "KI": "Kiribati",
+    "MH": "Insulele Marshall",
+    "NC": "Noua Caledonie",
+    "NF": "Insula Norfolk",
+    "NR": "Nauru",
+    "NU": "Niue",
+    "NZ": "Noua Zeelandă",
+    "PF": "Polinezia Franceză",
+    "PG": "Papua Noua Guinee",
+    "PN": "Insulele Pitcairn",
+    "PW": "Palau",
+    "SB": "Insulele Solomon",
+    "TO": "Tonga",
+    "TV": "Tuvalu",
+    "VU": "Vanuatu",
+    "WF": "Wallis și Futuna",
+    "WS": "Samoa",
+}
+
+# Mapping continente pentru coduri de țări
+CONTINENT_MAPPING = {
+    # Europa
+    "AD": "EU", "AL": "EU", "AT": "EU", "BA": "EU", "BE": "EU", "BG": "EU",
+    "BY": "EU", "CH": "EU", "CY": "EU", "CZ": "EU", "DE": "EU", "DK": "EU",
+    "EE": "EU", "ES": "EU", "FI": "EU", "FO": "EU", "FR": "EU", "GB": "EU",
+    "GI": "EU", "GR": "EU", "HR": "EU", "HU": "EU", "IE": "EU", "IS": "EU",
+    "IT": "EU", "LI": "EU", "LT": "EU", "LU": "EU", "LV": "EU", "MC": "EU",
+    "MD": "EU", "ME": "EU", "MK": "EU", "MT": "EU", "NL": "EU", "NO": "EU",
+    "PL": "EU", "PT": "EU", "RO": "EU", "RS": "EU", "RU": "EU", "SE": "EU",
+    "SI": "EU", "SK": "EU", "SM": "EU", "UA": "EU", "VA": "EU", "XK": "EU",
+    
+    # Asia
+    "AE": "AS", "AF": "AS", "AM": "AS", "AZ": "AS", "BD": "AS", "BH": "AS",
+    "BN": "AS", "BT": "AS", "CN": "AS", "GE": "AS", "HK": "AS", "ID": "AS",
+    "IL": "AS", "IN": "AS", "IQ": "AS", "IR": "AS", "JO": "AS", "JP": "AS",
+    "KG": "AS", "KH": "AS", "KP": "AS", "KR": "AS", "KW": "AS", "KZ": "AS",
+    "LA": "AS", "LB": "AS", "LK": "AS", "MM": "AS", "MN": "AS", "MO": "AS",
+    "MV": "AS", "MY": "AS", "NP": "AS", "OM": "AS", "PH": "AS", "PK": "AS",
+    "PS": "AS", "QA": "AS", "SA": "AS", "SG": "AS", "SY": "AS", "TH": "AS",
+    "TJ": "AS", "TL": "AS", "TM": "AS", "TR": "AS", "TW": "AS", "UZ": "AS",
+    "VN": "AS", "YE": "AS",
+    
+    # Africa
+    "AO": "AF", "BF": "AF", "BI": "AF", "BJ": "AF", "BW": "AF", "CD": "AF",
+    "CF": "AF", "CG": "AF", "CI": "AF", "CM": "AF", "CV": "AF", "DJ": "AF",
+    "DZ": "AF", "EG": "AF", "EH": "AF", "ER": "AF", "ET": "AF", "GA": "AF",
+    "GH": "AF", "GM": "AF", "GN": "AF", "GQ": "AF", "GW": "AF", "KE": "AF",
+    "KM": "AF", "LR": "AF", "LS": "AF", "LY": "AF", "MA": "AF", "MG": "AF",
+    "ML": "AF", "MR": "AF", "MU": "AF", "MW": "AF", "MZ": "AF", "NA": "AF",
+    "NE": "AF", "NG": "AF", "RE": "AF", "RW": "AF", "SC": "AF", "SD": "AF",
+    "SL": "AF", "SN": "AF", "SO": "AF", "SS": "AF", "ST": "AF", "SZ": "AF",
+    "TD": "AF", "TG": "AF", "TN": "AF", "TZ": "AF", "UG": "AF", "YT": "AF",
+    "ZA": "AF", "ZM": "AF", "ZW": "AF",
+    
+    # America de Nord
+    "AG": "NA", "AI": "NA", "AW": "NA", "BB": "NA", "BM": "NA", "BS": "NA",
+    "BZ": "NA", "CA": "NA", "CR": "NA", "CU": "NA", "CW": "NA", "DM": "NA",
+    "DO": "NA", "GD": "NA", "GL": "NA", "GP": "NA", "GT": "NA", "HN": "NA",
+    "HT": "NA", "JM": "NA", "KN": "NA", "KY": "NA", "LC": "NA", "MQ": "NA",
+    "MS": "NA", "MX": "NA", "NI": "NA", "PA": "NA", "PM": "NA", "PR": "NA",
+    "SV": "NA", "SX": "NA", "TC": "NA", "TT": "NA", "US": "NA", "VC": "NA",
+    "VG": "NA", "VI": "NA",
+    
+    # America de Sud
+    "AR": "SA", "BO": "SA", "BR": "SA", "CL": "SA", "CO": "SA", "EC": "SA",
+    "FK": "SA", "GF": "SA", "GY": "SA", "PE": "SA", "PY": "SA", "SR": "SA",
+    "UY": "SA", "VE": "SA",
+    
+    # Oceania
+    "AS": "OC", "AU": "OC", "CK": "OC", "FJ": "OC", "FM": "OC", "GU": "OC",
+    "KI": "OC", "MH": "OC", "NC": "OC", "NF": "OC", "NR": "OC", "NU": "OC",
+    "NZ": "OC", "PF": "OC", "PG": "OC", "PN": "OC", "PW": "OC", "SB": "OC",
+    "TO": "OC", "TV": "OC", "VU": "OC", "WF": "OC", "WS": "OC",
+}
+
+CONTINENT_NAMES = {
+    "AF": "Africa",
+    "AN": "Antarctica",
+    "AS": "Asia",
+    "EU": "Europa",
+    "NA": "America de Nord",
+    "OC": "Oceania",
+    "SA": "America de Sud"
+}
+
+
+def get_country_name(country_code: str) -> str:
+    """Convertește codul țării în nume complet"""
+    return COUNTRY_NAMES.get(country_code.upper(), country_code)
+
+
+def get_continent_code(country_code: str) -> str:
+    """Obține codul continentului pentru o țară"""
+    return CONTINENT_MAPPING.get(country_code.upper(), "EU")
+
+
+def get_continent_name(continent_code: str) -> str:
+    """Convertește codul continentului în nume"""
+    return CONTINENT_NAMES.get(continent_code.upper(), continent_code)
+
+
 @dataclass
 class FlightOffer:
     """Reprezintă o ofertă de zbor"""
     id: str
-    source: str  # API source
+    source: str
     airline: str
     airline_code: str
     origin: str
@@ -94,7 +421,7 @@ class BaseAPI:
         try:
             response = self.session.request(method, url, timeout=30, **kwargs)
             
-            if response.status_code == 429:  # Too Many Requests
+            if response.status_code == 429:
                 retry_after = int(response.headers.get('Retry-After', 60))
                 time.sleep(retry_after)
                 raise APIError("Rate limit exceeded", 429, self.name)
@@ -120,7 +447,6 @@ class AmadeusAPI(BaseAPI):
     
     def _get_access_token(self) -> str:
         """Obține token de acces OAuth2"""
-        # Verifică cache
         cached_token = cache_manager.get('token', 'amadeus')
         if cached_token:
             return cached_token
@@ -144,7 +470,6 @@ class AmadeusAPI(BaseAPI):
         data = response.json()
         token = data['access_token']
         
-        # Salvează în cache
         cache_manager.set('token', token, 'amadeus')
         
         return token
@@ -163,23 +488,8 @@ class AmadeusAPI(BaseAPI):
         currency: str = 'EUR',
         max_results: int = 50
     ) -> List[FlightOffer]:
-        """
-        Caută zboruri folosind Amadeus API
+        """Caută zboruri folosind Amadeus API"""
         
-        Args:
-            origin: Codul IATA al aeroportului de plecare
-            destination: Codul IATA al aeroportului de sosire
-            departure_date: Data plecării (YYYY-MM-DD)
-            return_date: Data întoarcerii (opțional)
-            adults: Număr adulți
-            children: Număr copii
-            infants: Număr bebeluși
-            cabin_class: ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST
-            non_stop: Doar zboruri directe
-            currency: Moneda pentru prețuri
-            max_results: Număr maxim de rezultate
-        """
-        # Verifică cache
         cache_key = (origin, destination, departure_date, return_date, 
                     adults, cabin_class, non_stop)
         cached = cache_manager.get('flights', *cache_key, 'amadeus')
@@ -214,7 +524,6 @@ class AmadeusAPI(BaseAPI):
             data = self._make_request('GET', url, params=params)
             offers = self._parse_flight_offers(data)
             
-            # Salvează în cache
             cache_manager.set('flights', offers, *cache_key, 'amadeus')
             
             return offers
@@ -227,25 +536,20 @@ class AmadeusAPI(BaseAPI):
         """Parsează răspunsul Amadeus"""
         offers = []
         
-        # Dicționar pentru carriers
         carriers = data.get('dictionaries', {}).get('carriers', {})
         
         for offer in data.get('data', []):
             try:
-                # Prima iterare (outbound)
                 itinerary = offer['itineraries'][0]
                 segments = itinerary['segments']
                 first_segment = segments[0]
                 last_segment = segments[-1]
                 
-                # Calculează numărul de escale
                 stops = len(segments) - 1
                 
-                # Airline info
                 airline_code = first_segment['carrierCode']
                 airline_name = carriers.get(airline_code, airline_code)
                 
-                # Parse times
                 departure = datetime.fromisoformat(
                     first_segment['departure']['at'].replace('Z', '+00:00')
                 )
@@ -253,20 +557,16 @@ class AmadeusAPI(BaseAPI):
                     last_segment['arrival']['at'].replace('Z', '+00:00')
                 )
                 
-                # Duration
                 duration = itinerary.get('duration', '')
                 if duration.startswith('PT'):
                     duration = duration[2:].lower().replace('h', 'h ').replace('m', 'm')
                 
-                # Price
                 price_info = offer['price']
                 price = float(price_info['total'])
                 currency = price_info['currency']
                 
-                # Cabin class
                 cabin = segments[0].get('cabin', 'ECONOMY')
                 
-                # Seats
                 seats = None
                 if 'numberOfBookableSeats' in offer:
                     seats = offer['numberOfBookableSeats']
@@ -299,7 +599,7 @@ class AmadeusAPI(BaseAPI):
                 offers.append(flight_offer)
                 
             except (KeyError, ValueError) as e:
-                continue  # Skip malformed offers
+                continue
         
         return offers
 
@@ -457,13 +757,10 @@ class FlightSearchService:
         max_results: int = 50,
         sort_by: str = 'price'
     ) -> List[FlightOffer]:
-        """
-        Caută zboruri din toate sursele disponibile
-        """
+        """Caută zboruri din toate sursele disponibile"""
         all_offers = []
         errors = []
         
-        # Căutare Amadeus
         try:
             amadeus_offers = self.amadeus.search_flights(
                 origin=origin,
@@ -482,7 +779,6 @@ class FlightSearchService:
         except Exception as e:
             errors.append(f"Amadeus: {str(e)}")
         
-        # Sortare rezultate
         if sort_by == 'price':
             all_offers.sort(key=lambda x: x.price)
         elif sort_by == 'duration':
@@ -492,11 +788,9 @@ class FlightSearchService:
         elif sort_by == 'stops':
             all_offers.sort(key=lambda x: (x.stops, x.price))
         
-        # Filtrare doar zboruri directe dacă e cerut
         if non_stop:
             all_offers = [o for o in all_offers if o.stops == 0]
         
-        # Actualizează monitorul de prețuri
         if all_offers:
             route_key = f"{origin}-{destination}-{departure_date}"
             min_price = min(o.price for o in all_offers)
@@ -505,25 +799,20 @@ class FlightSearchService:
         return all_offers[:max_results]
     
     def get_all_airports(self) -> Dict[str, Dict[str, List[dict]]]:
-        """
-        Obține toate aeroporturile organizate pe continente și țări
-        """
+        """Obține toate aeroporturile organizate pe continente și țări"""
         if self._airports_cache:
             return self._airports_cache
         
-        # Mapping continente
-        continent_mapping = {
-            'AF': 'Africa',
-            'AN': 'Antarctica',
-            'AS': 'Asia',
-            'EU': 'Europe',
-            'NA': 'North America',
-            'OC': 'Oceania',
-            'SA': 'South America'
-        }
-        
         # Inițializare structură
-        organized = {cont: {} for cont in continent_mapping.values()}
+        organized = {
+            "Europa": {},
+            "Asia": {},
+            "Africa": {},
+            "America de Nord": {},
+            "America de Sud": {},
+            "Oceania": {},
+            "Altele": {}
+        }
         
         try:
             airports = self.airlabs.get_airports()
@@ -532,30 +821,40 @@ class FlightSearchService:
                 if not airport.get('iata_code'):
                     continue
                 
-                country = airport.get('country_code', 'Unknown')
-                country_name = airport.get('country_name', country)
-                continent_code = self._get_continent(country)
-                continent_name = continent_mapping.get(continent_code, 'Other')
+                country_code = airport.get('country_code', 'XX')
                 
+                # Obține numele țării din dicționar
+                country_name = get_country_name(country_code)
+                
+                # Obține continentul
+                continent_code = get_continent_code(country_code)
+                continent_name = get_continent_name(continent_code)
+                
+                # Asigură-te că continentul există
                 if continent_name not in organized:
-                    organized[continent_name] = {}
+                    continent_name = "Altele"
                 
                 if country_name not in organized[continent_name]:
                     organized[continent_name][country_name] = []
                 
                 organized[continent_name][country_name].append({
                     'iata': airport.get('iata_code'),
-                    'name': airport.get('name', ''),
-                    'city': airport.get('city', ''),
+                    'name': airport.get('name', 'N/A'),
+                    'city': airport.get('city', 'N/A'),
                     'lat': airport.get('lat'),
                     'lng': airport.get('lng')
                 })
             
-            # Sortare
+            # Sortare alfabetică
             for continent in organized:
+                # Sortează țările
                 organized[continent] = dict(sorted(organized[continent].items()))
+                # Sortează aeroporturile în fiecare țară
                 for country in organized[continent]:
                     organized[continent][country].sort(key=lambda x: x['name'])
+            
+            # Elimină continentele goale
+            organized = {k: v for k, v in organized.items() if v}
             
             self._airports_cache = organized
             return organized
@@ -563,35 +862,6 @@ class FlightSearchService:
         except Exception as e:
             st.error(f"Error loading airports: {e}")
             return {}
-    
-    def _get_continent(self, country_code: str) -> str:
-        """Obține codul continentului pentru o țară"""
-        try:
-            import pycountry_convert as pc
-            return pc.country_alpha2_to_continent_code(country_code)
-        except:
-            # Fallback mapping pentru țările comune
-            europe = ['RO', 'DE', 'FR', 'IT', 'ES', 'GB', 'NL', 'BE', 'AT', 'CH', 
-                     'PL', 'CZ', 'HU', 'GR', 'PT', 'SE', 'NO', 'DK', 'FI', 'IE']
-            asia = ['CN', 'JP', 'KR', 'IN', 'TH', 'VN', 'SG', 'MY', 'ID', 'PH']
-            north_america = ['US', 'CA', 'MX']
-            south_america = ['BR', 'AR', 'CL', 'CO', 'PE']
-            africa = ['ZA', 'EG', 'MA', 'KE', 'NG']
-            oceania = ['AU', 'NZ']
-            
-            if country_code in europe:
-                return 'EU'
-            elif country_code in asia:
-                return 'AS'
-            elif country_code in north_america:
-                return 'NA'
-            elif country_code in south_america:
-                return 'SA'
-            elif country_code in africa:
-                return 'AF'
-            elif country_code in oceania:
-                return 'OC'
-            return 'EU'  # Default
     
     def get_airport_search_list(self) -> List[tuple]:
         """Returnează lista de aeroporturi pentru selectare"""
