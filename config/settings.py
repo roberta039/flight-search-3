@@ -14,7 +14,7 @@ class APIConfig:
     base_url: str
     key: str
     secret: Optional[str] = None
-    rate_limit: int = 100  # requests per minute
+    rate_limit: int = 100
     enabled: bool = True
 
 
@@ -23,10 +23,10 @@ class Settings:
     
     # Rate limiting defaults (requests per minute)
     RATE_LIMITS = {
-        'amadeus': 10,
         'rapidapi': 5,
         'airlabs': 10,
-        'aviationstack': 5
+        'tequila': 10,
+        'travelpayouts': 10
     }
     
     # Cache TTL (time to live) în secunde
@@ -38,10 +38,10 @@ class Settings:
     
     # Cabin classes disponibile
     CABIN_CLASSES = {
-        'ECONOMY': 'Economy',
-        'PREMIUM_ECONOMY': 'Premium Economy',
-        'BUSINESS': 'Business',
-        'FIRST': 'First Class'
+        'M': 'Economy',
+        'W': 'Premium Economy', 
+        'C': 'Business',
+        'F': 'First Class'
     }
     
     @classmethod
@@ -51,32 +51,16 @@ class Settings:
             # Încearcă Streamlit secrets (pentru deployment)
             return {
                 'rapidapi_key': st.secrets.get("RAPIDAPI_KEY", ""),
-                'amadeus_key': st.secrets.get("AMADEUS_API_KEY", ""),
-                'amadeus_secret': st.secrets.get("AMADEUS_API_SECRET", ""),
                 'airlabs_key': st.secrets.get("AIRLABS_API_KEY", ""),
-                'aerodatabox_key': st.secrets.get("AERODATABOX_KEY", "")
+                'tequila_key': st.secrets.get("TEQUILA_API_KEY", ""),
             }
         except Exception:
             # Fallback pentru environment variables
             return {
                 'rapidapi_key': os.getenv("RAPIDAPI_KEY", ""),
-                'amadeus_key': os.getenv("AMADEUS_API_KEY", ""),
-                'amadeus_secret': os.getenv("AMADEUS_API_SECRET", ""),
                 'airlabs_key': os.getenv("AIRLABS_API_KEY", ""),
-                'aerodatabox_key': os.getenv("AERODATABOX_KEY", "")
+                'tequila_key': os.getenv("TEQUILA_API_KEY", ""),
             }
-    
-    @classmethod
-    def get_amadeus_config(cls) -> APIConfig:
-        """Configurare Amadeus API"""
-        keys = cls.get_api_keys()
-        return APIConfig(
-            name="Amadeus",
-            base_url="https://api.amadeus.com",
-            key=keys['amadeus_key'],
-            secret=keys['amadeus_secret'],
-            rate_limit=cls.RATE_LIMITS['amadeus']
-        )
     
     @classmethod
     def get_rapidapi_config(cls) -> APIConfig:
@@ -84,7 +68,7 @@ class Settings:
         keys = cls.get_api_keys()
         return APIConfig(
             name="RapidAPI",
-            base_url="https://rapidapi.com",
+            base_url="https://sky-scrapper.p.rapidapi.com",
             key=keys['rapidapi_key'],
             rate_limit=cls.RATE_LIMITS['rapidapi']
         )
@@ -98,4 +82,15 @@ class Settings:
             base_url="https://airlabs.co/api/v9",
             key=keys['airlabs_key'],
             rate_limit=cls.RATE_LIMITS['airlabs']
+        )
+    
+    @classmethod
+    def get_tequila_config(cls) -> APIConfig:
+        """Configurare Kiwi Tequila API"""
+        keys = cls.get_api_keys()
+        return APIConfig(
+            name="Tequila",
+            base_url="https://api.tequila.kiwi.com",
+            key=keys['tequila_key'],
+            rate_limit=cls.RATE_LIMITS['tequila']
         )
