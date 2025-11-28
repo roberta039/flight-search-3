@@ -1,19 +1,24 @@
 """
-Servicii pentru căutarea zborurilor folosind API-uri oficiale
+Servicii pentru căutarea zborurilor folosind API-uri gratuite
+- Sky-Scrapper (Skyscanner via RapidAPI)
+- Kiwi Tequila API
+- AirLabs (pentru aeroporturi)
 """
 import requests
 import time
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import streamlit as st
 
 from config.settings import Settings
 from .cache_manager import cache_manager
 
 
-# Dicționar complet cu toate țările din lume
+# ============================================
+# DICȚIONARE ȚĂRI ȘI CONTINENTE
+# ============================================
+
 COUNTRY_NAMES = {
     # Europa
     "AD": "Andorra", "AL": "Albania", "AT": "Austria", "BA": "Bosnia și Herțegovina",
@@ -28,7 +33,6 @@ COUNTRY_NAMES = {
     "PL": "Polonia", "PT": "Portugalia", "RO": "România", "RS": "Serbia",
     "RU": "Rusia", "SE": "Suedia", "SI": "Slovenia", "SK": "Slovacia",
     "SM": "San Marino", "UA": "Ucraina", "VA": "Vatican", "XK": "Kosovo",
-    
     # Asia
     "AE": "Emiratele Arabe Unite", "AF": "Afganistan", "AM": "Armenia",
     "AZ": "Azerbaidjan", "BD": "Bangladesh", "BH": "Bahrain", "BN": "Brunei",
@@ -44,7 +48,6 @@ COUNTRY_NAMES = {
     "TJ": "Tadjikistan", "TL": "Timorul de Est", "TM": "Turkmenistan",
     "TR": "Turcia", "TW": "Taiwan", "UZ": "Uzbekistan", "VN": "Vietnam",
     "YE": "Yemen",
-    
     # Africa
     "AO": "Angola", "BF": "Burkina Faso", "BI": "Burundi", "BJ": "Benin",
     "BW": "Botswana", "CD": "Congo (RD)", "CF": "Republica Centrafricană",
@@ -61,7 +64,6 @@ COUNTRY_NAMES = {
     "ST": "São Tomé și Príncipe", "SZ": "Eswatini", "TD": "Ciad", "TG": "Togo",
     "TN": "Tunisia", "TZ": "Tanzania", "UG": "Uganda", "YT": "Mayotte",
     "ZA": "Africa de Sud", "ZM": "Zambia", "ZW": "Zimbabwe",
-    
     # America de Nord
     "AG": "Antigua și Barbuda", "AI": "Anguilla", "AW": "Aruba", "BB": "Barbados",
     "BM": "Bermuda", "BS": "Bahamas", "BZ": "Belize", "CA": "Canada",
@@ -75,13 +77,11 @@ COUNTRY_NAMES = {
     "TC": "Insulele Turks și Caicos", "TT": "Trinidad și Tobago",
     "US": "Statele Unite", "VC": "Saint Vincent și Grenadine",
     "VG": "Insulele Virgine Britanice", "VI": "Insulele Virgine Americane",
-    
     # America de Sud
     "AR": "Argentina", "BO": "Bolivia", "BR": "Brazilia", "CL": "Chile",
     "CO": "Columbia", "EC": "Ecuador", "FK": "Insulele Falkland",
     "GF": "Guyana Franceză", "GY": "Guyana", "PE": "Peru", "PY": "Paraguay",
     "SR": "Surinam", "UY": "Uruguay", "VE": "Venezuela",
-    
     # Oceania
     "AS": "Samoa Americană", "AU": "Australia", "CK": "Insulele Cook",
     "FJ": "Fiji", "FM": "Micronezia", "GU": "Guam", "KI": "Kiribati",
@@ -92,7 +92,6 @@ COUNTRY_NAMES = {
     "WF": "Wallis și Futuna", "WS": "Samoa",
 }
 
-# Mapping continente
 CONTINENT_MAPPING = {
     # Europa
     "AD": "EU", "AL": "EU", "AT": "EU", "BA": "EU", "BE": "EU", "BG": "EU",
@@ -145,7 +144,6 @@ CONTINENT_MAPPING = {
 
 CONTINENT_NAMES = {
     "AF": "Africa",
-    "AN": "Antarctica",
     "AS": "Asia",
     "EU": "Europa",
     "NA": "America de Nord",
@@ -155,19 +153,20 @@ CONTINENT_NAMES = {
 
 
 def get_country_name(country_code: str) -> str:
-    """Convertește codul țării în nume complet"""
     return COUNTRY_NAMES.get(country_code.upper(), country_code)
 
 
 def get_continent_code(country_code: str) -> str:
-    """Obține codul continentului pentru o țară"""
     return CONTINENT_MAPPING.get(country_code.upper(), "EU")
 
 
 def get_continent_name(continent_code: str) -> str:
-    """Convertește codul continentului în nume"""
     return CONTINENT_NAMES.get(continent_code.upper(), continent_code)
 
+
+# ============================================
+# MODELE DE DATE
+# ============================================
 
 @dataclass
 class FlightOffer:
@@ -190,7 +189,6 @@ class FlightOffer:
     seats_available: Optional[int] = None
     
     def to_dict(self) -> dict:
-        """Convertește în dicționar pentru DataFrame"""
         return {
             'ID': self.id,
             'Sursă': self.source,
@@ -205,12 +203,12 @@ class FlightOffer:
             'Monedă': self.currency,
             'Clasă': self.cabin_class,
             'Escale': self.stops,
-            'Locuri': self.seats_available or 'N/A'
+            'Locuri': self.seats_available or 'N/A',
+            'Link': self.booking_link or ''
         }
 
 
 class APIError(Exception):
-    """Excepție pentru erori API"""
     def __init__(self, message: str, status_code: int = None, api_name: str = None):
         self.message = message
         self.status_code = status_code
@@ -218,510 +216,5 @@ class APIError(Exception):
         super().__init__(self.message)
 
 
-class BaseAPI:
-    """Clasă de bază pentru API-uri"""
-    
-    def __init__(self, name: str):
-        self.name = name
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        })
-    
-    def _check_rate_limit(self):
-        """Verifică și aplică rate limiting"""
-        if not cache_manager.can_call_api(self.name):
-            wait_time = cache_manager.get_rate_limiter(self.name).wait_time()
-            if wait_time > 0:
-                time.sleep(wait_time)
-        cache_manager.record_api_call(self.name)
-
-
-class AmadeusAPI(BaseAPI):
-    """Client pentru Amadeus Flight Offers Search API"""
-    
-    def __init__(self):
-        super().__init__('amadeus')
-        self.config = Settings.get_amadeus_config()
-        self.base_url = "https://api.amadeus.com"
-        self._token = None
-        self._token_expires = None
-    
-    def _get_access_token(self) -> str:
-        """Obține token de acces OAuth2"""
-        # Verifică cache
-        cached_token = cache_manager.get('token', 'amadeus')
-        if cached_token:
-            return cached_token
-        
-        url = f"{self.base_url}/v1/security/oauth2/token"
-        
-        try:
-            response = requests.post(
-                url,
-                data={
-                    'grant_type': 'client_credentials',
-                    'client_id': self.config.key,
-                    'client_secret': self.config.secret
-                },
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                timeout=30
-            )
-            
-            if response.status_code != 200:
-                st.error(f"❌ Amadeus Auth Error: {response.status_code} - {response.text}")
-                raise APIError(f"Failed to get Amadeus token: {response.text}", 
-                              response.status_code, self.name)
-            
-            data = response.json()
-            token = data['access_token']
-            
-            # Salvează în cache
-            cache_manager.set('token', token, 'amadeus')
-            
-            return token
-            
-        except requests.exceptions.RequestException as e:
-            st.error(f"❌ Amadeus Connection Error: {str(e)}")
-            raise APIError(f"Connection error: {str(e)}", api_name=self.name)
-    
-    def search_flights(
-        self,
-        origin: str,
-        destination: str,
-        departure_date: str,
-        return_date: Optional[str] = None,
-        adults: int = 1,
-        children: int = 0,
-        infants: int = 0,
-        cabin_class: str = 'ECONOMY',
-        non_stop: bool = False,
-        currency: str = 'EUR',
-        max_results: int = 50
-    ) -> List[FlightOffer]:
-        """Caută zboruri folosind Amadeus API"""
-        
-        # Verifică cache
-        cache_key = (origin, destination, departure_date, return_date, 
-                    adults, cabin_class, non_stop)
-        cached = cache_manager.get('flights', *cache_key, 'amadeus')
-        if cached:
-            st.info("📦 Rezultate din cache")
-            return cached
-        
-        # Debug info
-        with st.expander("🔧 Debug Info", expanded=False):
-            st.write(f"**Origin:** {origin}")
-            st.write(f"**Destination:** {destination}")
-            st.write(f"**Date:** {departure_date}")
-            st.write(f"**API Key:** {self.config.key[:10]}..." if self.config.key else "❌ No API Key")
-            st.write(f"**API Secret:** {self.config.secret[:5]}..." if self.config.secret else "❌ No API Secret")
-        
-        try:
-            # Obține token
-            st.info("🔑 Se obține token-ul Amadeus...")
-            token = self._get_access_token()
-            st.success("✅ Token obținut!")
-            
-            self.session.headers.update({'Authorization': f'Bearer {token}'})
-            
-            url = f"{self.base_url}/v2/shopping/flight-offers"
-            
-            params = {
-                'originLocationCode': origin.upper(),
-                'destinationLocationCode': destination.upper(),
-                'departureDate': departure_date,
-                'adults': adults,
-                'travelClass': cabin_class,
-                'currencyCode': currency,
-                'max': min(max_results, 250)  # Amadeus max is 250
-            }
-            
-            if return_date:
-                params['returnDate'] = return_date
-            if children > 0:
-                params['children'] = children
-            if infants > 0:
-                params['infants'] = infants
-            if non_stop:
-                params['nonStop'] = 'true'
-            
-            st.info(f"🔍 Se caută zboruri {origin} → {destination}...")
-            
-            # Rate limiting
-            self._check_rate_limit()
-            
-            response = self.session.get(url, params=params, timeout=60)
-            
-            # Debug response
-            with st.expander("📡 API Response", expanded=False):
-                st.write(f"**Status Code:** {response.status_code}")
-                st.write(f"**URL:** {response.url}")
-            
-            if response.status_code == 401:
-                st.error("❌ Token invalid sau expirat. Se reîncearcă...")
-                cache_manager.set('token', None, 'amadeus')  # Clear cached token
-                token = self._get_access_token()
-                self.session.headers.update({'Authorization': f'Bearer {token}'})
-                response = self.session.get(url, params=params, timeout=60)
-            
-            if response.status_code != 200:
-                error_msg = response.text
-                try:
-                    error_data = response.json()
-                    if 'errors' in error_data:
-                        error_msg = error_data['errors'][0].get('detail', error_msg)
-                except:
-                    pass
-                st.error(f"❌ Amadeus API Error ({response.status_code}): {error_msg}")
-                return []
-            
-            data = response.json()
-            
-            # Debug data
-            with st.expander("📊 Raw Data", expanded=False):
-                st.write(f"**Total offers:** {len(data.get('data', []))}")
-                if data.get('data'):
-                    st.json(data['data'][0])  # Show first offer
-            
-            offers = self._parse_flight_offers(data)
-            
-            if offers:
-                st.success(f"✅ Găsite {len(offers)} zboruri!")
-                # Salvează în cache
-                cache_manager.set('flights', offers, *cache_key, 'amadeus')
-            else:
-                st.warning("⚠️ Nu s-au găsit zboruri pentru această rută.")
-            
-            return offers
-            
-        except APIError as e:
-            st.error(f"❌ API Error: {e.message}")
-            return []
-        except Exception as e:
-            st.error(f"❌ Unexpected Error: {str(e)}")
-            import traceback
-            with st.expander("🐛 Error Details"):
-                st.code(traceback.format_exc())
-            return []
-    
-    def _parse_flight_offers(self, data: dict) -> List[FlightOffer]:
-        """Parsează răspunsul Amadeus"""
-        offers = []
-        
-        carriers = data.get('dictionaries', {}).get('carriers', {})
-        
-        for offer in data.get('data', []):
-            try:
-                itinerary = offer['itineraries'][0]
-                segments = itinerary['segments']
-                first_segment = segments[0]
-                last_segment = segments[-1]
-                
-                stops = len(segments) - 1
-                
-                airline_code = first_segment['carrierCode']
-                airline_name = carriers.get(airline_code, airline_code)
-                
-                # Parse times - handle different formats
-                dep_str = first_segment['departure']['at']
-                arr_str = last_segment['arrival']['at']
-                
-                # Remove timezone info if present
-                if '+' in dep_str:
-                    dep_str = dep_str.split('+')[0]
-                if '+' in arr_str:
-                    arr_str = arr_str.split('+')[0]
-                if 'Z' in dep_str:
-                    dep_str = dep_str.replace('Z', '')
-                if 'Z' in arr_str:
-                    arr_str = arr_str.replace('Z', '')
-                
-                departure = datetime.fromisoformat(dep_str)
-                arrival = datetime.fromisoformat(arr_str)
-                
-                # Duration
-                duration = itinerary.get('duration', '')
-                if duration.startswith('PT'):
-                    # Parse PT2H30M format
-                    duration = duration[2:]  # Remove PT
-                    hours = 0
-                    minutes = 0
-                    if 'H' in duration:
-                        h_part = duration.split('H')[0]
-                        hours = int(h_part)
-                        duration = duration.split('H')[1]
-                    if 'M' in duration:
-                        m_part = duration.replace('M', '')
-                        if m_part:
-                            minutes = int(m_part)
-                    duration = f"{hours}h {minutes}m"
-                
-                # Price
-                price_info = offer['price']
-                price = float(price_info['total'])
-                currency = price_info['currency']
-                
-                # Cabin class
-                cabin = 'ECONOMY'
-                if segments[0].get('travelerPricings'):
-                    cabin = segments[0]['travelerPricings'][0].get('fareDetailsBySegment', [{}])[0].get('cabin', 'ECONOMY')
-                
-                # Seats
-                seats = offer.get('numberOfBookableSeats')
-                
-                flight_offer = FlightOffer(
-                    id=offer['id'],
-                    source='Amadeus',
-                    airline=airline_name,
-                    airline_code=airline_code,
-                    origin=first_segment['departure']['iataCode'],
-                    destination=last_segment['arrival']['iataCode'],
-                    departure_time=departure,
-                    arrival_time=arrival,
-                    duration=duration,
-                    price=price,
-                    currency=currency,
-                    cabin_class=cabin,
-                    stops=stops,
-                    segments=[{
-                        'from': seg['departure']['iataCode'],
-                        'to': seg['arrival']['iataCode'],
-                        'carrier': seg['carrierCode'],
-                        'flight_number': seg.get('number', ''),
-                        'departure': seg['departure']['at'],
-                        'arrival': seg['arrival']['at']
-                    } for seg in segments],
-                    seats_available=seats
-                )
-                
-                offers.append(flight_offer)
-                
-            except (KeyError, ValueError, TypeError) as e:
-                st.warning(f"⚠️ Eroare la parsarea ofertei: {str(e)}")
-                continue
-        
-        return offers
-
-
-class AirLabsAPI(BaseAPI):
-    """Client pentru AirLabs API"""
-    
-    def __init__(self):
-        super().__init__('airlabs')
-        self.config = Settings.get_airlabs_config()
-        self.base_url = "https://airlabs.co/api/v9"
-    
-    def get_airports(self, country_code: Optional[str] = None) -> List[dict]:
-        """Obține lista de aeroporturi"""
-        cache_key = ('airports', country_code or 'all')
-        cached = cache_manager.get('airports', *cache_key)
-        if cached:
-            return cached
-        
-        url = f"{self.base_url}/airports"
-        params = {'api_key': self.config.key}
-        
-        if country_code:
-            params['country_code'] = country_code.upper()
-        
-        try:
-            self._check_rate_limit()
-            response = self.session.get(url, params=params, timeout=30)
-            
-            if response.status_code != 200:
-                st.error(f"❌ AirLabs Error: {response.status_code}")
-                return []
-            
-            data = response.json()
-            airports = data.get('response', [])
-            
-            cache_manager.set('airports', airports, *cache_key)
-            return airports
-            
-        except Exception as e:
-            st.error(f"❌ AirLabs Error: {str(e)}")
-            return []
-    
-    def get_airlines(self) -> List[dict]:
-        """Obține lista de companii aeriene"""
-        cached = cache_manager.get('airports', 'airlines')
-        if cached:
-            return cached
-        
-        url = f"{self.base_url}/airlines"
-        params = {'api_key': self.config.key}
-        
-        try:
-            self._check_rate_limit()
-            response = self.session.get(url, params=params, timeout=30)
-            
-            if response.status_code != 200:
-                return []
-            
-            data = response.json()
-            airlines = data.get('response', [])
-            
-            cache_manager.set('airports', airlines, 'airlines')
-            return airlines
-            
-        except Exception:
-            return []
-
-
-class FlightSearchService:
-    """Serviciu principal pentru căutarea zborurilor"""
-    
-    def __init__(self):
-        self.amadeus = AmadeusAPI()
-        self.airlabs = AirLabsAPI()
-        self._airports_cache = {}
-    
-    def search_flights(
-        self,
-        origin: str,
-        destination: str,
-        departure_date: str,
-        return_date: Optional[str] = None,
-        adults: int = 1,
-        children: int = 0,
-        infants: int = 0,
-        cabin_class: str = 'ECONOMY',
-        non_stop: bool = False,
-        currency: str = 'EUR',
-        max_results: int = 50,
-        sort_by: str = 'price'
-    ) -> List[FlightOffer]:
-        """Caută zboruri din toate sursele disponibile"""
-        
-        all_offers = []
-        
-        # Căutare Amadeus
-        amadeus_offers = self.amadeus.search_flights(
-            origin=origin,
-            destination=destination,
-            departure_date=departure_date,
-            return_date=return_date,
-            adults=adults,
-            children=children,
-            infants=infants,
-            cabin_class=cabin_class,
-            non_stop=non_stop,
-            currency=currency,
-            max_results=max_results
-        )
-        all_offers.extend(amadeus_offers)
-        
-        # Sortare
-        if sort_by == 'price':
-            all_offers.sort(key=lambda x: x.price)
-        elif sort_by == 'duration':
-            all_offers.sort(key=lambda x: x.departure_time)
-        elif sort_by == 'stops':
-            all_offers.sort(key=lambda x: (x.stops, x.price))
-        
-        # Actualizează monitorul de prețuri
-        if all_offers:
-            route_key = f"{origin}-{destination}-{departure_date}"
-            min_price = min(o.price for o in all_offers)
-            cache_manager.update_price_history(route_key, min_price)
-        
-        return all_offers[:max_results]
-    
-    def get_all_airports(self) -> Dict[str, Dict[str, List[dict]]]:
-        """Obține toate aeroporturile organizate pe continente și țări"""
-        if self._airports_cache:
-            return self._airports_cache
-        
-        # Inițializare structură
-        organized = {
-            "Europa": {},
-            "Asia": {},
-            "Africa": {},
-            "America de Nord": {},
-            "America de Sud": {},
-            "Oceania": {},
-            "Altele": {}
-        }
-        
-        try:
-            airports = self.airlabs.get_airports()
-            
-            if not airports:
-                st.warning("⚠️ Nu s-au putut încărca aeroporturile de la AirLabs")
-                return organized
-            
-            for airport in airports:
-                if not airport.get('iata_code'):
-                    continue
-                
-                country_code = airport.get('country_code', 'XX')
-                
-                # Obține numele țării
-                country_name = get_country_name(country_code)
-                
-                # Obține continentul
-                continent_code = get_continent_code(country_code)
-                continent_name = get_continent_name(continent_code)
-                
-                # Mapare nume continent
-                continent_map = {
-                    "Europa": "Europa",
-                    "Asia": "Asia", 
-                    "Africa": "Africa",
-                    "America de Nord": "America de Nord",
-                    "America de Sud": "America de Sud",
-                    "Oceania": "Oceania"
-                }
-                
-                final_continent = continent_map.get(continent_name, "Altele")
-                
-                if final_continent not in organized:
-                    final_continent = "Altele"
-                
-                if country_name not in organized[final_continent]:
-                    organized[final_continent][country_name] = []
-                
-                organized[final_continent][country_name].append({
-                    'iata': airport.get('iata_code'),
-                    'name': airport.get('name', 'N/A'),
-                    'city': airport.get('city', 'N/A'),
-                    'lat': airport.get('lat'),
-                    'lng': airport.get('lng')
-                })
-            
-            # Sortare
-            for continent in organized:
-                organized[continent] = dict(sorted(organized[continent].items()))
-                for country in organized[continent]:
-                    organized[continent][country].sort(key=lambda x: x['name'])
-            
-            # Elimină continentele goale
-            organized = {k: v for k, v in organized.items() if v}
-            
-            self._airports_cache = organized
-            return organized
-            
-        except Exception as e:
-            st.error(f"❌ Error loading airports: {e}")
-            return {}
-    
-    def add_price_monitor(self, origin: str, destination: str, 
-                          departure_date: str, target_price: Optional[float] = None):
-        """Adaugă un monitor de prețuri"""
-        route_key = f"{origin}-{destination}-{departure_date}"
-        search_params = {
-            'origin': origin,
-            'destination': destination,
-            'departure_date': departure_date
-        }
-        cache_manager.add_price_monitor(route_key, search_params, target_price)
-    
-    def get_monitored_routes(self) -> Dict[str, dict]:
-        """Returnează rutele monitorizate"""
-        return cache_manager.get_price_monitors()
-    
-    def get_price_history(self, route_key: str) -> List[dict]:
-        """Returnează istoricul prețurilor"""
-        return cache_manager.get_price_history(route_key)
+# ============================================
+# 
