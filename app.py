@@ -11,7 +11,7 @@ import time
 from services.flight_apis import FlightSearchService, FlightOffer
 from services.cache_manager import cache_manager
 from utils.validators import validate_search_params
-from utils.helpers import format_price, format_duration, get_stops_description
+from utils.helpers import format_price
 from config.settings import Settings
 
 # Configurare pagină
