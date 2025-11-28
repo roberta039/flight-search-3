@@ -1,53 +1,73 @@
-"""Configuration settings for the flight search application."""
+"""
+Configurări centrale pentru aplicația de căutare zboruri
+"""
 import streamlit as st
-from typing import Dict, Any
+from dataclasses import dataclass
+from typing import Optional
+import os
 
+
+@dataclass
 class APIConfig:
-    """API Configuration Manager"""
-    
-    @staticmethod
-    def get_rapidapi_key() -> str:
-        """Get RapidAPI key from Streamlit secrets"""
-        try:
-            return st.secrets['rapidapi']['key']
-        except Exception:
-            return '5a26e14d6amsheeb99b61b3ff65ep17583cjsn4eb17402fec4'
-    
-    @staticmethod
-    def get_airlabs_key() -> str:
-        """Get AirLabs API key"""
-        try:
-            return st.secrets['airlabs']['api_key']
-        except Exception:
-            return '15151c68-6858-4cc2-a819-33b87bfc7651'
+    """Configurare pentru un API"""
+    name: str
+    base_url: str
+    key: str
+    rate_limit: int = 100
+    enabled: bool = True
 
-class AppConfig:
-    """Application Configuration"""
+
+class Settings:
+    """Manager central pentru configurări"""
     
-    # Rate limiting settings (requests per minute)
     RATE_LIMITS = {
         'rapidapi': 5,
         'airlabs': 10,
-        'skyscanner': 5
     }
     
-    # Cache settings (in seconds)
     CACHE_TTL = {
-        'flight_search': 300,  # 5 minutes
-        'airport_data': 3600,  # 1 hour
-        'price_monitor': 900   # 15 minutes
+        'airports': 86400,
+        'flights': 300,
+        'prices': 180
     }
     
-    # Supported cabin classes
-    CABIN_CLASSES = ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST']
-    
-    # Maximum number of results
-    MAX_RESULTS = 50
-    
-    # Auto-refresh intervals (in seconds)
-    REFRESH_INTERVALS = {
-        '5 minutes': 300,
-        '15 minutes': 900,
-        '30 minutes': 1800,
-        '1 hour': 3600
+    CABIN_CLASSES = {
+        'economy': 'Economy',
+        'premium_economy': 'Premium Economy',
+        'business': 'Business',
+        'first': 'First Class'
     }
+    
+    @classmethod
+    def get_api_keys(cls) -> dict:
+        """Obține cheile API din Streamlit secrets"""
+        try:
+            return {
+                'rapidapi_key': st.secrets.get("RAPIDAPI_KEY", ""),
+                'airlabs_key': st.secrets.get("AIRLABS_API_KEY", ""),
+            }
+        except Exception:
+            return {
+                'rapidapi_key': os.getenv("RAPIDAPI_KEY", ""),
+                'airlabs_key': os.getenv("AIRLABS_API_KEY", ""),
+            }
+    
+    @classmethod
+    def get_rapidapi_config(cls) -> APIConfig:
+        keys = cls.get_api_keys()
+        return APIConfig(
+            name="RapidAPI",
+            base_url="https://sky-scrapper.p.rapidapi.com",
+            key=keys['rapidapi_key'],
+            rate_limit=cls.RATE_LIMITS['rapidapi']
+        )
+    
+    @classmethod
+    def get_airlabs_config(cls) -> APIConfig:
+        keys = cls.get_api_keys()
+        return APIConfig(
+            name="AirLabs",
+            base_url="https://airlabs.co/api/v9",
+            key=keys['airlabs_key'],
+            rate_limit=cls.RATE_LIMITS['airlabs']
+        )
