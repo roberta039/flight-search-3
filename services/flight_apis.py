@@ -16,249 +16,83 @@ from .cache_manager import cache_manager
 # Dicționar complet cu toate țările din lume
 COUNTRY_NAMES = {
     # Europa
-    "AD": "Andorra",
-    "AL": "Albania",
-    "AT": "Austria",
-    "BA": "Bosnia și Herțegovina",
-    "BE": "Belgia",
-    "BG": "Bulgaria",
-    "BY": "Belarus",
-    "CH": "Elveția",
-    "CY": "Cipru",
-    "CZ": "Cehia",
-    "DE": "Germania",
-    "DK": "Danemarca",
-    "EE": "Estonia",
-    "ES": "Spania",
-    "FI": "Finlanda",
-    "FO": "Insulele Feroe",
-    "FR": "Franța",
-    "GB": "Marea Britanie",
-    "GI": "Gibraltar",
-    "GR": "Grecia",
-    "HR": "Croația",
-    "HU": "Ungaria",
-    "IE": "Irlanda",
-    "IS": "Islanda",
-    "IT": "Italia",
-    "LI": "Liechtenstein",
-    "LT": "Lituania",
-    "LU": "Luxemburg",
-    "LV": "Letonia",
-    "MC": "Monaco",
-    "MD": "Moldova",
-    "ME": "Muntenegru",
-    "MK": "Macedonia de Nord",
-    "MT": "Malta",
-    "NL": "Olanda",
-    "NO": "Norvegia",
-    "PL": "Polonia",
-    "PT": "Portugalia",
-    "RO": "România",
-    "RS": "Serbia",
-    "RU": "Rusia",
-    "SE": "Suedia",
-    "SI": "Slovenia",
-    "SK": "Slovacia",
-    "SM": "San Marino",
-    "UA": "Ucraina",
-    "VA": "Vatican",
-    "XK": "Kosovo",
+    "AD": "Andorra", "AL": "Albania", "AT": "Austria", "BA": "Bosnia și Herțegovina",
+    "BE": "Belgia", "BG": "Bulgaria", "BY": "Belarus", "CH": "Elveția",
+    "CY": "Cipru", "CZ": "Cehia", "DE": "Germania", "DK": "Danemarca",
+    "EE": "Estonia", "ES": "Spania", "FI": "Finlanda", "FO": "Insulele Feroe",
+    "FR": "Franța", "GB": "Marea Britanie", "GI": "Gibraltar", "GR": "Grecia",
+    "HR": "Croația", "HU": "Ungaria", "IE": "Irlanda", "IS": "Islanda",
+    "IT": "Italia", "LI": "Liechtenstein", "LT": "Lituania", "LU": "Luxemburg",
+    "LV": "Letonia", "MC": "Monaco", "MD": "Moldova", "ME": "Muntenegru",
+    "MK": "Macedonia de Nord", "MT": "Malta", "NL": "Olanda", "NO": "Norvegia",
+    "PL": "Polonia", "PT": "Portugalia", "RO": "România", "RS": "Serbia",
+    "RU": "Rusia", "SE": "Suedia", "SI": "Slovenia", "SK": "Slovacia",
+    "SM": "San Marino", "UA": "Ucraina", "VA": "Vatican", "XK": "Kosovo",
     
     # Asia
-    "AE": "Emiratele Arabe Unite",
-    "AF": "Afganistan",
-    "AM": "Armenia",
-    "AZ": "Azerbaidjan",
-    "BD": "Bangladesh",
-    "BH": "Bahrain",
-    "BN": "Brunei",
-    "BT": "Bhutan",
-    "CN": "China",
-    "GE": "Georgia",
-    "HK": "Hong Kong",
-    "ID": "Indonezia",
-    "IL": "Israel",
-    "IN": "India",
-    "IQ": "Irak",
-    "IR": "Iran",
-    "JO": "Iordania",
-    "JP": "Japonia",
-    "KG": "Kârgâzstan",
-    "KH": "Cambodgia",
-    "KP": "Coreea de Nord",
-    "KR": "Coreea de Sud",
-    "KW": "Kuweit",
-    "KZ": "Kazahstan",
-    "LA": "Laos",
-    "LB": "Liban",
-    "LK": "Sri Lanka",
-    "MM": "Myanmar",
-    "MN": "Mongolia",
-    "MO": "Macao",
-    "MV": "Maldive",
-    "MY": "Malaezia",
-    "NP": "Nepal",
-    "OM": "Oman",
-    "PH": "Filipine",
-    "PK": "Pakistan",
-    "PS": "Palestina",
-    "QA": "Qatar",
-    "SA": "Arabia Saudită",
-    "SG": "Singapore",
-    "SY": "Siria",
-    "TH": "Thailanda",
-    "TJ": "Tadjikistan",
-    "TL": "Timorul de Est",
-    "TM": "Turkmenistan",
-    "TR": "Turcia",
-    "TW": "Taiwan",
-    "UZ": "Uzbekistan",
-    "VN": "Vietnam",
+    "AE": "Emiratele Arabe Unite", "AF": "Afganistan", "AM": "Armenia",
+    "AZ": "Azerbaidjan", "BD": "Bangladesh", "BH": "Bahrain", "BN": "Brunei",
+    "BT": "Bhutan", "CN": "China", "GE": "Georgia", "HK": "Hong Kong",
+    "ID": "Indonezia", "IL": "Israel", "IN": "India", "IQ": "Irak",
+    "IR": "Iran", "JO": "Iordania", "JP": "Japonia", "KG": "Kârgâzstan",
+    "KH": "Cambodgia", "KP": "Coreea de Nord", "KR": "Coreea de Sud",
+    "KW": "Kuweit", "KZ": "Kazahstan", "LA": "Laos", "LB": "Liban",
+    "LK": "Sri Lanka", "MM": "Myanmar", "MN": "Mongolia", "MO": "Macao",
+    "MV": "Maldive", "MY": "Malaezia", "NP": "Nepal", "OM": "Oman",
+    "PH": "Filipine", "PK": "Pakistan", "PS": "Palestina", "QA": "Qatar",
+    "SA": "Arabia Saudită", "SG": "Singapore", "SY": "Siria", "TH": "Thailanda",
+    "TJ": "Tadjikistan", "TL": "Timorul de Est", "TM": "Turkmenistan",
+    "TR": "Turcia", "TW": "Taiwan", "UZ": "Uzbekistan", "VN": "Vietnam",
     "YE": "Yemen",
     
     # Africa
-    "AO": "Angola",
-    "BF": "Burkina Faso",
-    "BI": "Burundi",
-    "BJ": "Benin",
-    "BW": "Botswana",
-    "CD": "Congo (RD)",
-    "CF": "Republica Centrafricană",
-    "CG": "Congo",
-    "CI": "Coasta de Fildeș",
-    "CM": "Camerun",
-    "CV": "Capul Verde",
-    "DJ": "Djibouti",
-    "DZ": "Algeria",
-    "EG": "Egipt",
-    "EH": "Sahara Occidentală",
-    "ER": "Eritreea",
-    "ET": "Etiopia",
-    "GA": "Gabon",
-    "GH": "Ghana",
-    "GM": "Gambia",
-    "GN": "Guineea",
-    "GQ": "Guineea Ecuatorială",
-    "GW": "Guineea-Bissau",
-    "KE": "Kenya",
-    "KM": "Comore",
-    "LR": "Liberia",
-    "LS": "Lesotho",
-    "LY": "Libia",
-    "MA": "Maroc",
-    "MG": "Madagascar",
-    "ML": "Mali",
-    "MR": "Mauritania",
-    "MU": "Mauritius",
-    "MW": "Malawi",
-    "MZ": "Mozambic",
-    "NA": "Namibia",
-    "NE": "Niger",
-    "NG": "Nigeria",
-    "RE": "Réunion",
-    "RW": "Rwanda",
-    "SC": "Seychelles",
-    "SD": "Sudan",
-    "SL": "Sierra Leone",
-    "SN": "Senegal",
-    "SO": "Somalia",
-    "SS": "Sudanul de Sud",
-    "ST": "São Tomé și Príncipe",
-    "SZ": "Eswatini",
-    "TD": "Ciad",
-    "TG": "Togo",
-    "TN": "Tunisia",
-    "TZ": "Tanzania",
-    "UG": "Uganda",
-    "YT": "Mayotte",
-    "ZA": "Africa de Sud",
-    "ZM": "Zambia",
-    "ZW": "Zimbabwe",
+    "AO": "Angola", "BF": "Burkina Faso", "BI": "Burundi", "BJ": "Benin",
+    "BW": "Botswana", "CD": "Congo (RD)", "CF": "Republica Centrafricană",
+    "CG": "Congo", "CI": "Coasta de Fildeș", "CM": "Camerun", "CV": "Capul Verde",
+    "DJ": "Djibouti", "DZ": "Algeria", "EG": "Egipt", "EH": "Sahara Occidentală",
+    "ER": "Eritreea", "ET": "Etiopia", "GA": "Gabon", "GH": "Ghana",
+    "GM": "Gambia", "GN": "Guineea", "GQ": "Guineea Ecuatorială",
+    "GW": "Guineea-Bissau", "KE": "Kenya", "KM": "Comore", "LR": "Liberia",
+    "LS": "Lesotho", "LY": "Libia", "MA": "Maroc", "MG": "Madagascar",
+    "ML": "Mali", "MR": "Mauritania", "MU": "Mauritius", "MW": "Malawi",
+    "MZ": "Mozambic", "NA": "Namibia", "NE": "Niger", "NG": "Nigeria",
+    "RE": "Réunion", "RW": "Rwanda", "SC": "Seychelles", "SD": "Sudan",
+    "SL": "Sierra Leone", "SN": "Senegal", "SO": "Somalia", "SS": "Sudanul de Sud",
+    "ST": "São Tomé și Príncipe", "SZ": "Eswatini", "TD": "Ciad", "TG": "Togo",
+    "TN": "Tunisia", "TZ": "Tanzania", "UG": "Uganda", "YT": "Mayotte",
+    "ZA": "Africa de Sud", "ZM": "Zambia", "ZW": "Zimbabwe",
     
     # America de Nord
-    "AG": "Antigua și Barbuda",
-    "AI": "Anguilla",
-    "AW": "Aruba",
-    "BB": "Barbados",
-    "BM": "Bermuda",
-    "BS": "Bahamas",
-    "BZ": "Belize",
-    "CA": "Canada",
-    "CR": "Costa Rica",
-    "CU": "Cuba",
-    "CW": "Curaçao",
-    "DM": "Dominica",
-    "DO": "Republica Dominicană",
-    "GD": "Grenada",
-    "GL": "Groenlanda",
-    "GP": "Guadelupa",
-    "GT": "Guatemala",
-    "HN": "Honduras",
-    "HT": "Haiti",
-    "JM": "Jamaica",
-    "KN": "Saint Kitts și Nevis",
-    "KY": "Insulele Cayman",
-    "LC": "Saint Lucia",
-    "MQ": "Martinica",
-    "MS": "Montserrat",
-    "MX": "Mexic",
-    "NI": "Nicaragua",
-    "PA": "Panama",
-    "PM": "Saint Pierre și Miquelon",
-    "PR": "Puerto Rico",
-    "SV": "El Salvador",
-    "SX": "Sint Maarten",
-    "TC": "Insulele Turks și Caicos",
-    "TT": "Trinidad și Tobago",
-    "US": "Statele Unite",
-    "VC": "Saint Vincent și Grenadine",
-    "VG": "Insulele Virgine Britanice",
-    "VI": "Insulele Virgine Americane",
+    "AG": "Antigua și Barbuda", "AI": "Anguilla", "AW": "Aruba", "BB": "Barbados",
+    "BM": "Bermuda", "BS": "Bahamas", "BZ": "Belize", "CA": "Canada",
+    "CR": "Costa Rica", "CU": "Cuba", "CW": "Curaçao", "DM": "Dominica",
+    "DO": "Republica Dominicană", "GD": "Grenada", "GL": "Groenlanda",
+    "GP": "Guadelupa", "GT": "Guatemala", "HN": "Honduras", "HT": "Haiti",
+    "JM": "Jamaica", "KN": "Saint Kitts și Nevis", "KY": "Insulele Cayman",
+    "LC": "Saint Lucia", "MQ": "Martinica", "MS": "Montserrat", "MX": "Mexic",
+    "NI": "Nicaragua", "PA": "Panama", "PM": "Saint Pierre și Miquelon",
+    "PR": "Puerto Rico", "SV": "El Salvador", "SX": "Sint Maarten",
+    "TC": "Insulele Turks și Caicos", "TT": "Trinidad și Tobago",
+    "US": "Statele Unite", "VC": "Saint Vincent și Grenadine",
+    "VG": "Insulele Virgine Britanice", "VI": "Insulele Virgine Americane",
     
     # America de Sud
-    "AR": "Argentina",
-    "BO": "Bolivia",
-    "BR": "Brazilia",
-    "CL": "Chile",
-    "CO": "Columbia",
-    "EC": "Ecuador",
-    "FK": "Insulele Falkland",
-    "GF": "Guyana Franceză",
-    "GY": "Guyana",
-    "PE": "Peru",
-    "PY": "Paraguay",
-    "SR": "Surinam",
-    "UY": "Uruguay",
-    "VE": "Venezuela",
+    "AR": "Argentina", "BO": "Bolivia", "BR": "Brazilia", "CL": "Chile",
+    "CO": "Columbia", "EC": "Ecuador", "FK": "Insulele Falkland",
+    "GF": "Guyana Franceză", "GY": "Guyana", "PE": "Peru", "PY": "Paraguay",
+    "SR": "Surinam", "UY": "Uruguay", "VE": "Venezuela",
     
     # Oceania
-    "AS": "Samoa Americană",
-    "AU": "Australia",
-    "CK": "Insulele Cook",
-    "FJ": "Fiji",
-    "FM": "Micronezia",
-    "GU": "Guam",
-    "KI": "Kiribati",
-    "MH": "Insulele Marshall",
-    "NC": "Noua Caledonie",
-    "NF": "Insula Norfolk",
-    "NR": "Nauru",
-    "NU": "Niue",
-    "NZ": "Noua Zeelandă",
-    "PF": "Polinezia Franceză",
-    "PG": "Papua Noua Guinee",
-    "PN": "Insulele Pitcairn",
-    "PW": "Palau",
-    "SB": "Insulele Solomon",
-    "TO": "Tonga",
-    "TV": "Tuvalu",
-    "VU": "Vanuatu",
-    "WF": "Wallis și Futuna",
-    "WS": "Samoa",
+    "AS": "Samoa Americană", "AU": "Australia", "CK": "Insulele Cook",
+    "FJ": "Fiji", "FM": "Micronezia", "GU": "Guam", "KI": "Kiribati",
+    "MH": "Insulele Marshall", "NC": "Noua Caledonie", "NF": "Insula Norfolk",
+    "NR": "Nauru", "NU": "Niue", "NZ": "Noua Zeelandă", "PF": "Polinezia Franceză",
+    "PG": "Papua Noua Guinee", "PN": "Insulele Pitcairn", "PW": "Palau",
+    "SB": "Insulele Solomon", "TO": "Tonga", "TV": "Tuvalu", "VU": "Vanuatu",
+    "WF": "Wallis și Futuna", "WS": "Samoa",
 }
 
-# Mapping continente pentru coduri de țări
+# Mapping continente
 CONTINENT_MAPPING = {
     # Europa
     "AD": "EU", "AL": "EU", "AT": "EU", "BA": "EU", "BE": "EU", "BG": "EU",
@@ -269,7 +103,6 @@ CONTINENT_MAPPING = {
     "MD": "EU", "ME": "EU", "MK": "EU", "MT": "EU", "NL": "EU", "NO": "EU",
     "PL": "EU", "PT": "EU", "RO": "EU", "RS": "EU", "RU": "EU", "SE": "EU",
     "SI": "EU", "SK": "EU", "SM": "EU", "UA": "EU", "VA": "EU", "XK": "EU",
-    
     # Asia
     "AE": "AS", "AF": "AS", "AM": "AS", "AZ": "AS", "BD": "AS", "BH": "AS",
     "BN": "AS", "BT": "AS", "CN": "AS", "GE": "AS", "HK": "AS", "ID": "AS",
@@ -280,7 +113,6 @@ CONTINENT_MAPPING = {
     "PS": "AS", "QA": "AS", "SA": "AS", "SG": "AS", "SY": "AS", "TH": "AS",
     "TJ": "AS", "TL": "AS", "TM": "AS", "TR": "AS", "TW": "AS", "UZ": "AS",
     "VN": "AS", "YE": "AS",
-    
     # Africa
     "AO": "AF", "BF": "AF", "BI": "AF", "BJ": "AF", "BW": "AF", "CD": "AF",
     "CF": "AF", "CG": "AF", "CI": "AF", "CM": "AF", "CV": "AF", "DJ": "AF",
@@ -292,7 +124,6 @@ CONTINENT_MAPPING = {
     "SL": "AF", "SN": "AF", "SO": "AF", "SS": "AF", "ST": "AF", "SZ": "AF",
     "TD": "AF", "TG": "AF", "TN": "AF", "TZ": "AF", "UG": "AF", "YT": "AF",
     "ZA": "AF", "ZM": "AF", "ZW": "AF",
-    
     # America de Nord
     "AG": "NA", "AI": "NA", "AW": "NA", "BB": "NA", "BM": "NA", "BS": "NA",
     "BZ": "NA", "CA": "NA", "CR": "NA", "CU": "NA", "CW": "NA", "DM": "NA",
@@ -301,12 +132,10 @@ CONTINENT_MAPPING = {
     "MS": "NA", "MX": "NA", "NI": "NA", "PA": "NA", "PM": "NA", "PR": "NA",
     "SV": "NA", "SX": "NA", "TC": "NA", "TT": "NA", "US": "NA", "VC": "NA",
     "VG": "NA", "VI": "NA",
-    
     # America de Sud
     "AR": "SA", "BO": "SA", "BR": "SA", "CL": "SA", "CO": "SA", "EC": "SA",
     "FK": "SA", "GF": "SA", "GY": "SA", "PE": "SA", "PY": "SA", "SR": "SA",
     "UY": "SA", "VE": "SA",
-    
     # Oceania
     "AS": "OC", "AU": "OC", "CK": "OC", "FJ": "OC", "FM": "OC", "GU": "OC",
     "KI": "OC", "MH": "OC", "NC": "OC", "NF": "OC", "NR": "OC", "NU": "OC",
@@ -407,32 +236,6 @@ class BaseAPI:
             if wait_time > 0:
                 time.sleep(wait_time)
         cache_manager.record_api_call(self.name)
-    
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((requests.exceptions.Timeout, 
-                                        requests.exceptions.ConnectionError))
-    )
-    def _make_request(self, method: str, url: str, **kwargs) -> dict:
-        """Face un request cu retry și error handling"""
-        self._check_rate_limit()
-        
-        try:
-            response = self.session.request(method, url, timeout=30, **kwargs)
-            
-            if response.status_code == 429:
-                retry_after = int(response.headers.get('Retry-After', 60))
-                time.sleep(retry_after)
-                raise APIError("Rate limit exceeded", 429, self.name)
-            
-            response.raise_for_status()
-            return response.json()
-            
-        except requests.exceptions.HTTPError as e:
-            raise APIError(f"HTTP Error: {str(e)}", response.status_code, self.name)
-        except requests.exceptions.RequestException as e:
-            raise APIError(f"Request Error: {str(e)}", api_name=self.name)
 
 
 class AmadeusAPI(BaseAPI):
@@ -447,32 +250,41 @@ class AmadeusAPI(BaseAPI):
     
     def _get_access_token(self) -> str:
         """Obține token de acces OAuth2"""
+        # Verifică cache
         cached_token = cache_manager.get('token', 'amadeus')
         if cached_token:
             return cached_token
         
         url = f"{self.base_url}/v1/security/oauth2/token"
         
-        response = requests.post(
-            url,
-            data={
-                'grant_type': 'client_credentials',
-                'client_id': self.config.key,
-                'client_secret': self.config.secret
-            },
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
-        )
-        
-        if response.status_code != 200:
-            raise APIError(f"Failed to get Amadeus token: {response.text}", 
-                          response.status_code, self.name)
-        
-        data = response.json()
-        token = data['access_token']
-        
-        cache_manager.set('token', token, 'amadeus')
-        
-        return token
+        try:
+            response = requests.post(
+                url,
+                data={
+                    'grant_type': 'client_credentials',
+                    'client_id': self.config.key,
+                    'client_secret': self.config.secret
+                },
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=30
+            )
+            
+            if response.status_code != 200:
+                st.error(f"❌ Amadeus Auth Error: {response.status_code} - {response.text}")
+                raise APIError(f"Failed to get Amadeus token: {response.text}", 
+                              response.status_code, self.name)
+            
+            data = response.json()
+            token = data['access_token']
+            
+            # Salvează în cache
+            cache_manager.set('token', token, 'amadeus')
+            
+            return token
+            
+        except requests.exceptions.RequestException as e:
+            st.error(f"❌ Amadeus Connection Error: {str(e)}")
+            raise APIError(f"Connection error: {str(e)}", api_name=self.name)
     
     def search_flights(
         self,
@@ -490,46 +302,108 @@ class AmadeusAPI(BaseAPI):
     ) -> List[FlightOffer]:
         """Caută zboruri folosind Amadeus API"""
         
+        # Verifică cache
         cache_key = (origin, destination, departure_date, return_date, 
                     adults, cabin_class, non_stop)
         cached = cache_manager.get('flights', *cache_key, 'amadeus')
         if cached:
+            st.info("📦 Rezultate din cache")
             return cached
         
-        token = self._get_access_token()
-        self.session.headers.update({'Authorization': f'Bearer {token}'})
-        
-        url = f"{self.base_url}/v2/shopping/flight-offers"
-        
-        params = {
-            'originLocationCode': origin.upper(),
-            'destinationLocationCode': destination.upper(),
-            'departureDate': departure_date,
-            'adults': adults,
-            'travelClass': cabin_class,
-            'currencyCode': currency,
-            'max': max_results
-        }
-        
-        if return_date:
-            params['returnDate'] = return_date
-        if children > 0:
-            params['children'] = children
-        if infants > 0:
-            params['infants'] = infants
-        if non_stop:
-            params['nonStop'] = 'true'
+        # Debug info
+        with st.expander("🔧 Debug Info", expanded=False):
+            st.write(f"**Origin:** {origin}")
+            st.write(f"**Destination:** {destination}")
+            st.write(f"**Date:** {departure_date}")
+            st.write(f"**API Key:** {self.config.key[:10]}..." if self.config.key else "❌ No API Key")
+            st.write(f"**API Secret:** {self.config.secret[:5]}..." if self.config.secret else "❌ No API Secret")
         
         try:
-            data = self._make_request('GET', url, params=params)
+            # Obține token
+            st.info("🔑 Se obține token-ul Amadeus...")
+            token = self._get_access_token()
+            st.success("✅ Token obținut!")
+            
+            self.session.headers.update({'Authorization': f'Bearer {token}'})
+            
+            url = f"{self.base_url}/v2/shopping/flight-offers"
+            
+            params = {
+                'originLocationCode': origin.upper(),
+                'destinationLocationCode': destination.upper(),
+                'departureDate': departure_date,
+                'adults': adults,
+                'travelClass': cabin_class,
+                'currencyCode': currency,
+                'max': min(max_results, 250)  # Amadeus max is 250
+            }
+            
+            if return_date:
+                params['returnDate'] = return_date
+            if children > 0:
+                params['children'] = children
+            if infants > 0:
+                params['infants'] = infants
+            if non_stop:
+                params['nonStop'] = 'true'
+            
+            st.info(f"🔍 Se caută zboruri {origin} → {destination}...")
+            
+            # Rate limiting
+            self._check_rate_limit()
+            
+            response = self.session.get(url, params=params, timeout=60)
+            
+            # Debug response
+            with st.expander("📡 API Response", expanded=False):
+                st.write(f"**Status Code:** {response.status_code}")
+                st.write(f"**URL:** {response.url}")
+            
+            if response.status_code == 401:
+                st.error("❌ Token invalid sau expirat. Se reîncearcă...")
+                cache_manager.set('token', None, 'amadeus')  # Clear cached token
+                token = self._get_access_token()
+                self.session.headers.update({'Authorization': f'Bearer {token}'})
+                response = self.session.get(url, params=params, timeout=60)
+            
+            if response.status_code != 200:
+                error_msg = response.text
+                try:
+                    error_data = response.json()
+                    if 'errors' in error_data:
+                        error_msg = error_data['errors'][0].get('detail', error_msg)
+                except:
+                    pass
+                st.error(f"❌ Amadeus API Error ({response.status_code}): {error_msg}")
+                return []
+            
+            data = response.json()
+            
+            # Debug data
+            with st.expander("📊 Raw Data", expanded=False):
+                st.write(f"**Total offers:** {len(data.get('data', []))}")
+                if data.get('data'):
+                    st.json(data['data'][0])  # Show first offer
+            
             offers = self._parse_flight_offers(data)
             
-            cache_manager.set('flights', offers, *cache_key, 'amadeus')
+            if offers:
+                st.success(f"✅ Găsite {len(offers)} zboruri!")
+                # Salvează în cache
+                cache_manager.set('flights', offers, *cache_key, 'amadeus')
+            else:
+                st.warning("⚠️ Nu s-au găsit zboruri pentru această rută.")
             
             return offers
             
         except APIError as e:
-            st.error(f"Amadeus API Error: {e.message}")
+            st.error(f"❌ API Error: {e.message}")
+            return []
+        except Exception as e:
+            st.error(f"❌ Unexpected Error: {str(e)}")
+            import traceback
+            with st.expander("🐛 Error Details"):
+                st.code(traceback.format_exc())
             return []
     
     def _parse_flight_offers(self, data: dict) -> List[FlightOffer]:
@@ -550,26 +424,52 @@ class AmadeusAPI(BaseAPI):
                 airline_code = first_segment['carrierCode']
                 airline_name = carriers.get(airline_code, airline_code)
                 
-                departure = datetime.fromisoformat(
-                    first_segment['departure']['at'].replace('Z', '+00:00')
-                )
-                arrival = datetime.fromisoformat(
-                    last_segment['arrival']['at'].replace('Z', '+00:00')
-                )
+                # Parse times - handle different formats
+                dep_str = first_segment['departure']['at']
+                arr_str = last_segment['arrival']['at']
                 
+                # Remove timezone info if present
+                if '+' in dep_str:
+                    dep_str = dep_str.split('+')[0]
+                if '+' in arr_str:
+                    arr_str = arr_str.split('+')[0]
+                if 'Z' in dep_str:
+                    dep_str = dep_str.replace('Z', '')
+                if 'Z' in arr_str:
+                    arr_str = arr_str.replace('Z', '')
+                
+                departure = datetime.fromisoformat(dep_str)
+                arrival = datetime.fromisoformat(arr_str)
+                
+                # Duration
                 duration = itinerary.get('duration', '')
                 if duration.startswith('PT'):
-                    duration = duration[2:].lower().replace('h', 'h ').replace('m', 'm')
+                    # Parse PT2H30M format
+                    duration = duration[2:]  # Remove PT
+                    hours = 0
+                    minutes = 0
+                    if 'H' in duration:
+                        h_part = duration.split('H')[0]
+                        hours = int(h_part)
+                        duration = duration.split('H')[1]
+                    if 'M' in duration:
+                        m_part = duration.replace('M', '')
+                        if m_part:
+                            minutes = int(m_part)
+                    duration = f"{hours}h {minutes}m"
                 
+                # Price
                 price_info = offer['price']
                 price = float(price_info['total'])
                 currency = price_info['currency']
                 
-                cabin = segments[0].get('cabin', 'ECONOMY')
+                # Cabin class
+                cabin = 'ECONOMY'
+                if segments[0].get('travelerPricings'):
+                    cabin = segments[0]['travelerPricings'][0].get('fareDetailsBySegment', [{}])[0].get('cabin', 'ECONOMY')
                 
-                seats = None
-                if 'numberOfBookableSeats' in offer:
-                    seats = offer['numberOfBookableSeats']
+                # Seats
+                seats = offer.get('numberOfBookableSeats')
                 
                 flight_offer = FlightOffer(
                     id=offer['id'],
@@ -598,7 +498,8 @@ class AmadeusAPI(BaseAPI):
                 
                 offers.append(flight_offer)
                 
-            except (KeyError, ValueError) as e:
+            except (KeyError, ValueError, TypeError) as e:
+                st.warning(f"⚠️ Eroare la parsarea ofertei: {str(e)}")
                 continue
         
         return offers
@@ -626,14 +527,21 @@ class AirLabsAPI(BaseAPI):
             params['country_code'] = country_code.upper()
         
         try:
-            data = self._make_request('GET', url, params=params)
+            self._check_rate_limit()
+            response = self.session.get(url, params=params, timeout=30)
+            
+            if response.status_code != 200:
+                st.error(f"❌ AirLabs Error: {response.status_code}")
+                return []
+            
+            data = response.json()
             airports = data.get('response', [])
             
             cache_manager.set('airports', airports, *cache_key)
             return airports
             
-        except APIError as e:
-            st.error(f"AirLabs API Error: {e.message}")
+        except Exception as e:
+            st.error(f"❌ AirLabs Error: {str(e)}")
             return []
     
     def get_airlines(self) -> List[dict]:
@@ -646,90 +554,19 @@ class AirLabsAPI(BaseAPI):
         params = {'api_key': self.config.key}
         
         try:
-            data = self._make_request('GET', url, params=params)
+            self._check_rate_limit()
+            response = self.session.get(url, params=params, timeout=30)
+            
+            if response.status_code != 200:
+                return []
+            
+            data = response.json()
             airlines = data.get('response', [])
             
             cache_manager.set('airports', airlines, 'airlines')
             return airlines
             
-        except APIError as e:
-            st.error(f"AirLabs API Error: {e.message}")
-            return []
-    
-    def get_routes(self, dep_iata: str) -> List[dict]:
-        """Obține rutele de la un aeroport"""
-        cached = cache_manager.get('airports', 'routes', dep_iata)
-        if cached:
-            return cached
-        
-        url = f"{self.base_url}/routes"
-        params = {
-            'api_key': self.config.key,
-            'dep_iata': dep_iata.upper()
-        }
-        
-        try:
-            data = self._make_request('GET', url, params=params)
-            routes = data.get('response', [])
-            
-            cache_manager.set('airports', routes, 'routes', dep_iata)
-            return routes
-            
-        except APIError as e:
-            st.error(f"AirLabs API Error: {e.message}")
-            return []
-
-
-class AeroDataBoxAPI(BaseAPI):
-    """Client pentru AeroDataBox API (via RapidAPI)"""
-    
-    def __init__(self):
-        super().__init__('rapidapi')
-        keys = Settings.get_api_keys()
-        self.api_key = keys['rapidapi_key']
-        self.base_url = "https://aerodatabox.p.rapidapi.com"
-        self.session.headers.update({
-            'x-rapidapi-host': 'aerodatabox.p.rapidapi.com',
-            'x-rapidapi-key': self.api_key
-        })
-    
-    def get_airport_info(self, iata_code: str) -> Optional[dict]:
-        """Obține informații despre un aeroport"""
-        cached = cache_manager.get('airports', 'info', iata_code)
-        if cached:
-            return cached
-        
-        url = f"{self.base_url}/airports/iata/{iata_code.upper()}"
-        
-        try:
-            data = self._make_request('GET', url)
-            cache_manager.set('airports', data, 'info', iata_code)
-            return data
-            
-        except APIError:
-            return None
-    
-    def get_airport_flights(
-        self, 
-        iata_code: str, 
-        direction: str = 'Departure',
-        hours_from_now: int = 12
-    ) -> List[dict]:
-        """Obține zborurile de la/către un aeroport"""
-        url = f"{self.base_url}/flights/airports/iata/{iata_code.upper()}/{direction}"
-        
-        from_time = datetime.utcnow()
-        to_time = from_time + timedelta(hours=hours_from_now)
-        
-        params = {
-            'fromLocal': from_time.strftime('%Y-%m-%dT%H:%M'),
-            'toLocal': to_time.strftime('%Y-%m-%dT%H:%M')
-        }
-        
-        try:
-            data = self._make_request('GET', url, params=params)
-            return data.get('departures', []) if direction == 'Departure' else data.get('arrivals', [])
-        except APIError:
+        except Exception:
             return []
 
 
@@ -739,7 +576,6 @@ class FlightSearchService:
     def __init__(self):
         self.amadeus = AmadeusAPI()
         self.airlabs = AirLabsAPI()
-        self.aerodatabox = AeroDataBoxAPI()
         self._airports_cache = {}
     
     def search_flights(
@@ -758,39 +594,34 @@ class FlightSearchService:
         sort_by: str = 'price'
     ) -> List[FlightOffer]:
         """Caută zboruri din toate sursele disponibile"""
+        
         all_offers = []
-        errors = []
         
-        try:
-            amadeus_offers = self.amadeus.search_flights(
-                origin=origin,
-                destination=destination,
-                departure_date=departure_date,
-                return_date=return_date,
-                adults=adults,
-                children=children,
-                infants=infants,
-                cabin_class=cabin_class,
-                non_stop=non_stop,
-                currency=currency,
-                max_results=max_results
-            )
-            all_offers.extend(amadeus_offers)
-        except Exception as e:
-            errors.append(f"Amadeus: {str(e)}")
+        # Căutare Amadeus
+        amadeus_offers = self.amadeus.search_flights(
+            origin=origin,
+            destination=destination,
+            departure_date=departure_date,
+            return_date=return_date,
+            adults=adults,
+            children=children,
+            infants=infants,
+            cabin_class=cabin_class,
+            non_stop=non_stop,
+            currency=currency,
+            max_results=max_results
+        )
+        all_offers.extend(amadeus_offers)
         
+        # Sortare
         if sort_by == 'price':
             all_offers.sort(key=lambda x: x.price)
         elif sort_by == 'duration':
             all_offers.sort(key=lambda x: x.departure_time)
-        elif sort_by == 'departure':
-            all_offers.sort(key=lambda x: x.departure_time)
         elif sort_by == 'stops':
             all_offers.sort(key=lambda x: (x.stops, x.price))
         
-        if non_stop:
-            all_offers = [o for o in all_offers if o.stops == 0]
-        
+        # Actualizează monitorul de prețuri
         if all_offers:
             route_key = f"{origin}-{destination}-{departure_date}"
             min_price = min(o.price for o in all_offers)
@@ -817,27 +648,42 @@ class FlightSearchService:
         try:
             airports = self.airlabs.get_airports()
             
+            if not airports:
+                st.warning("⚠️ Nu s-au putut încărca aeroporturile de la AirLabs")
+                return organized
+            
             for airport in airports:
                 if not airport.get('iata_code'):
                     continue
                 
                 country_code = airport.get('country_code', 'XX')
                 
-                # Obține numele țării din dicționar
+                # Obține numele țării
                 country_name = get_country_name(country_code)
                 
                 # Obține continentul
                 continent_code = get_continent_code(country_code)
                 continent_name = get_continent_name(continent_code)
                 
-                # Asigură-te că continentul există
-                if continent_name not in organized:
-                    continent_name = "Altele"
+                # Mapare nume continent
+                continent_map = {
+                    "Europa": "Europa",
+                    "Asia": "Asia", 
+                    "Africa": "Africa",
+                    "America de Nord": "America de Nord",
+                    "America de Sud": "America de Sud",
+                    "Oceania": "Oceania"
+                }
                 
-                if country_name not in organized[continent_name]:
-                    organized[continent_name][country_name] = []
+                final_continent = continent_map.get(continent_name, "Altele")
                 
-                organized[continent_name][country_name].append({
+                if final_continent not in organized:
+                    final_continent = "Altele"
+                
+                if country_name not in organized[final_continent]:
+                    organized[final_continent][country_name] = []
+                
+                organized[final_continent][country_name].append({
                     'iata': airport.get('iata_code'),
                     'name': airport.get('name', 'N/A'),
                     'city': airport.get('city', 'N/A'),
@@ -845,11 +691,9 @@ class FlightSearchService:
                     'lng': airport.get('lng')
                 })
             
-            # Sortare alfabetică
+            # Sortare
             for continent in organized:
-                # Sortează țările
                 organized[continent] = dict(sorted(organized[continent].items()))
-                # Sortează aeroporturile în fiecare țară
                 for country in organized[continent]:
                     organized[continent][country].sort(key=lambda x: x['name'])
             
@@ -860,21 +704,8 @@ class FlightSearchService:
             return organized
             
         except Exception as e:
-            st.error(f"Error loading airports: {e}")
+            st.error(f"❌ Error loading airports: {e}")
             return {}
-    
-    def get_airport_search_list(self) -> List[tuple]:
-        """Returnează lista de aeroporturi pentru selectare"""
-        airports = self.get_all_airports()
-        result = []
-        
-        for continent, countries in airports.items():
-            for country, airport_list in countries.items():
-                for airport in airport_list:
-                    label = f"{airport['iata']} - {airport['name']} ({airport['city']}, {country})"
-                    result.append((airport['iata'], label, continent, country))
-        
-        return sorted(result, key=lambda x: x[1])
     
     def add_price_monitor(self, origin: str, destination: str, 
                           departure_date: str, target_price: Optional[float] = None):
